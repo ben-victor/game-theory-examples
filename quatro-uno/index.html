@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quatro-Uno Game</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --player-card: #2563eb;
+      --cpu-card: #dc2626;
+      --disabled-card: #475569;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .play-area {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      min-height: 120px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+    }
+
+    .hand-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .hand-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .cards-row {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .card {
+      width: 60px;
+      height: 90px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      user-select: none;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .card.player {
+      background-color: var(--player-card);
+      cursor: pointer;
+    }
+
+    .card.player:hover:not(.disabled) {
+      transform: translateY(-6px);
+    }
+
+    .card.cpu {
+      background-color: var(--cpu-card);
+    }
+
+    .card.disabled {
+      background-color: var(--disabled-card);
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 1.1rem;
+      min-height: 1.5em;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Quatro-Uno</h1>
+    
+    <div class="rules">
+      <strong>Rules:</strong> Both players start with cards 1, 2, 3, 4. 
+      Higher card wins and returns to hand. Loser discards. 
+      <em>Ties discard both.</em> 
+      <br><strong>Special rule:</strong> When 1 faces 4, both cards are discarded.
+      <br>First to lose all cards loses the match.
+    </div>
+
+    <div class="scoreboard">
+      <div>Player Wins: <span id="playerScore">0</span></div>
+      <div>Draws: <span id="drawScore">0</span></div>
+      <div>CPU Wins: <span id="cpuScore">0</span></div>
+    </div>
+
+    <!-- CPU Hand -->
+    <div class="hand-container">
+      <div class="hand-title">Computer's Hand</div>
+      <div class="cards-row" id="cpuHand"></div>
+    </div>
+
+    <!-- Active Battle Arena -->
+    <div class="play-area">
+      <div id="playerPlayed"></div>
+      <div class="status-msg" id="statusMsg">Select a card to play!</div>
+      <div id="cpuPlayed"></div>
+    </div>
+
+    <!-- Player Hand -->
+    <div class="hand-container">
+      <div class="hand-title">Your Hand</div>
+      <div class="cards-row" id="playerHand"></div>
+    </div>
+
+    <!-- Match History Log -->
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <button class="reset-btn" onclick="startNewGame()">New Match</button>
+
+    <!-- Credits & Attribution -->
+    <footer>
+      Based on the <strong>Quatro-Uno</strong> game theory exercise created by <strong>Prof. Erich Prisner</strong><br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    // Game State
+    let playerHand = [1, 2, 3, 4];
+    let cpuHand = [1, 2, 3, 4];
+    let scores = { player: 0, cpu: 0, draw: 0 };
+    let isProcessingRound = false;
+
+    function renderHands() {
+      const pContainer = document.getElementById('playerHand');
+      const cContainer = document.getElementById('cpuHand');
+      
+      pContainer.innerHTML = '';
+      cContainer.innerHTML = '';
+
+      // Render Player Cards (1-4)
+      [1, 2, 3, 4].forEach(val => {
+        const hasCard = playerHand.includes(val);
+        const cardEl = document.createElement('div');
+        cardEl.className = `card player ${hasCard ? '' : 'disabled'}`;
+        cardEl.innerText = val;
+        
+        if (hasCard && !isProcessingRound) {
+          cardEl.onclick = () => playRound(val);
+        }
+        pContainer.appendChild(cardEl);
+      });
+
+      // Render CPU Cards (1-4)
+      [1, 2, 3, 4].forEach(val => {
+        const hasCard = cpuHand.includes(val);
+        const cardEl = document.createElement('div');
+        cardEl.className = `card cpu ${hasCard ? '' : 'disabled'}`;
+        cardEl.innerText = '?'; 
+        cContainer.appendChild(cardEl);
+      });
+    }
+
+    function getCpuCard() {
+      const randomIndex = Math.floor(Math.random() * cpuHand.length);
+      return cpuHand[randomIndex];
+    }
+
+    function logMove(text, isMatchEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isMatchEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight; // Auto-scroll to latest move
+    }
+
+    function playRound(playerCard) {
+      if (isProcessingRound) return;
+      
+      isProcessingRound = true;
+
+      const cpuCard = getCpuCard();
+
+      // Log the move immediately
+      logMove(`You: ${playerCard}, Comp: ${cpuCard}`);
+
+      // Show played cards in battle arena
+      document.getElementById('playerPlayed').innerHTML = `<div class="card player">${playerCard}</div>`;
+      document.getElementById('cpuPlayed').innerHTML = `<div class="card cpu">${cpuCard}</div>`;
+
+      const status = document.getElementById('statusMsg');
+
+      setTimeout(() => {
+        if (playerCard === cpuCard) {
+          status.innerText = `Tie! Both discarded ${playerCard}.`;
+          playerHand = playerHand.filter(c => c !== playerCard);
+          cpuHand = cpuHand.filter(c => c !== cpuCard);
+        } 
+        else if ((playerCard === 1 && cpuCard === 4) || (playerCard === 4 && cpuCard === 1)) {
+          status.innerText = `1 vs 4 Trap! Both discarded.`;
+          playerHand = playerHand.filter(c => c !== playerCard);
+          cpuHand = cpuHand.filter(c => c !== cpuCard);
+        } 
+        else if (playerCard > cpuCard) {
+          status.innerText = `You won the round! CPU discards ${cpuCard}.`;
+          cpuHand = cpuHand.filter(c => c !== cpuCard);
+        } 
+        else {
+          status.innerText = `CPU won the round! You discard ${playerCard}.`;
+          playerHand = playerHand.filter(c => c !== playerCard);
+        }
+
+        isProcessingRound = false;
+
+        renderHands();
+        checkMatchOver();
+      }, 800);
+    }
+
+    function checkMatchOver() {
+      const status = document.getElementById('statusMsg');
+      let gameOver = false;
+      let resultText = '';
+      
+      if (playerHand.length === 0 && cpuHand.length === 0) {
+        status.innerText = "Match ended in a Draw!";
+        resultText = "End of match: Draw.";
+        scores.draw++;
+        gameOver = true;
+      } else if (playerHand.length === 0) {
+        status.innerText = "CPU Wins the match!";
+        resultText = "End of match: Comp wins.";
+        scores.cpu++;
+        gameOver = true;
+      } else if (cpuHand.length === 0) {
+        status.innerText = "You Win the match!";
+        resultText = "End of match: You win.";
+        scores.player++;
+        gameOver = true;
+      }
+
+      if (gameOver) {
+        isProcessingRound = true; 
+        logMove(resultText, true); // Log match end status
+        document.getElementById('playerScore').innerText = scores.player;
+        document.getElementById('cpuScore').innerText = scores.cpu;
+        document.getElementById('drawScore').innerText = scores.draw;
+      }
+    }
+
+    function startNewGame() {
+      playerHand = [1, 2, 3, 4];
+      cpuHand = [1, 2, 3, 4];
+      isProcessingRound = false;
+      document.getElementById('playerPlayed').innerHTML = '';
+      document.getElementById('cpuPlayed').innerHTML = '';
+      document.getElementById('statusMsg').innerText = 'Select a card to play!';
+      document.getElementById('historyLog').innerHTML = ''; // Clear history log
+      renderHands();
+    }
+
+    // Initialize game
+    startNewGame();
+  </script>
+</body>
+</html>
