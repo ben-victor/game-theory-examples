@@ -273,23 +273,38 @@
       .move-option { flex-direction: column; align-items: flex-start; }
       .move-btn { width: 100%; }
     }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
+    <a href="../" class="back-link">&larr; Back to Games</a>
     <h1>Lisa's Game</h1>
 
     <div class="rules">
-      <strong>Rules:</strong> This is a variant of the classic Nim game, invented by Lisa Prisner.
-      The board is a row of cards, each showing a 1, 2, or 3. Looking at the row from the current
-      end, let <em>x</em> be the value of the last remaining card. On your turn you may:
+      <strong>Rules:</strong> This is a variant, invented by Lisa Prisner, of the classic game of 'Nim'.
+      The board is a row of cards, each showing a 1, 2, or 3. Let <em>x</em> be the value of the current highlighted card on the board below. On your turn you may:
       <ul>
-        <li><strong>Move 1:</strong> remove the last <em>x</em> cards.</li>
-        <li><strong>Move 2:</strong> remove every card back to (and including) the second-most-recent
+        <li><strong>Move 1:</strong> remove the first <em>x</em> cards (including the highlighted card).</li>
+        <li><strong>Move 2:</strong> remove every card up to (and including) the second-most-recent
           card whose value is also <em>x</em>.</li>
       </ul>
-      Players alternate turns with the computer. Whoever removes the last card <strong>loses</strong>.
+      Turns alternate between the player and the computer. Whoever removes the last card <strong>loses</strong>.
     </div>
 
     <div class="scoreboard">
