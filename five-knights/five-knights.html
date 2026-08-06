@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Five Knights</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --happy: #22c55e;
+      --unhappy: #ef4444;
+      --knight-A: #2563eb;
+      --knight-B: #9333ea;
+      --knight-C: #16a34a;
+      --knight-D: #ea580c;
+      --knight-E: #db2777;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 980px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .rules ul {
+      margin: 0.5rem 0 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .equilibrium-banner {
+      text-align: center;
+      font-weight: bold;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    .equilibrium-banner.yes {
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid var(--happy);
+      color: var(--happy);
+    }
+
+    .equilibrium-banner.no {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--unhappy);
+      color: #fca5a5;
+    }
+
+    .election-result {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(0,0,0,0.2);
+      padding: 0.9rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .vote-count {
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .vote-count .count-num {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .elected-line {
+      font-weight: bold;
+      font-size: 1.05rem;
+      color: var(--accent);
+      text-align: center;
+      width: 100%;
+      margin-top: 0.4rem;
+    }
+
+    .knights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .knight-card {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      padding: 0.9rem;
+      border-top: 4px solid var(--k-color);
+    }
+
+    .knight-card.A { --k-color: var(--knight-A); }
+    .knight-card.B { --k-color: var(--knight-B); }
+    .knight-card.C { --k-color: var(--knight-C); }
+    .knight-card.D { --k-color: var(--knight-D); }
+    .knight-card.E { --k-color: var(--knight-E); }
+
+    .knight-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--k-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      color: #fff;
+      border: 3px solid var(--mood-color, var(--happy));
+      position: relative;
+    }
+
+    .avatar .badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #0f172a;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--k-color);
+    }
+
+    .mood {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      font-size: 1rem;
+      background: #0f172a;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .knight-name {
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .knight-payoff {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .pref-editor {
+      margin-bottom: 0.7rem;
+    }
+
+    .pref-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 0.3rem;
+    }
+
+    .pref-inputs {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .pref-inputs input {
+      width: 24px;
+      text-align: center;
+      border-radius: 4px;
+      border: 1px solid #334155;
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 0.2rem 0;
+    }
+
+    .apply-btn {
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      background: var(--disabled-card);
+      color: #f8fafc;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.3rem;
+      cursor: pointer;
+    }
+
+    .apply-btn:hover {
+      opacity: 0.9;
+    }
+
+    .pref-error {
+      font-size: 0.7rem;
+      color: var(--unhappy);
+      margin-top: 0.2rem;
+      min-height: 1em;
+    }
+
+    .vote-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .vote-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      font-size: 0.78rem;
+      border: 1px solid transparent;
+    }
+
+    .vote-option:hover {
+      border-color: var(--k-color);
+    }
+
+    .vote-option.selected {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--k-color);
+    }
+
+    .vote-option .vo-label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .vote-option .vo-payoff {
+      font-weight: bold;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .vote-option .vo-payoff.pos { color: var(--happy); }
+    .vote-option .vo-payoff.neg { color: var(--unhappy); }
+    .vote-option .vo-payoff.zero { color: #94a3b8; }
+
+    .radio-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid #64748b;
+      flex-shrink: 0;
+    }
+
+    .vote-option.selected .radio-dot {
+      background: var(--k-color);
+      border-color: var(--k-color);
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .reset-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .reset-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .reset-btn.secondary {
+      background: var(--disabled-card);
+      color: #f8fafc;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../" class="back-link">&larr; Back to Games</a>
+    <h1>Five Knights</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> Five knights — A, B, C, D, E — are electing a leader from among themselves.
+      Each knight has a personal ranking of all five knights, from favorite to least favorite. All five
+      vote simultaneously for one knight each.
+      <ul>
+        <li>A knight is elected if they get <strong>strictly more votes than every other knight</strong>. Even 2 votes can be enough if nobody else reaches 2.</li>
+        <li>If there's a tie for the most votes, nobody is elected.</li>
+      </ul>
+      Payoffs: <strong>+2</strong> if your 1st choice is elected, <strong>+1</strong> for your 2nd choice,
+      <strong>0</strong> if nobody is elected, <strong>&minus;1 / &minus;2 / &minus;3</strong> for your 3rd / 4th / 5th choice.
+      <br><br>
+      Each knight's card shows the payoff they'd get for voting each way, given everyone else's current
+      vote. A knight is <strong>happy</strong> (green ring) if their current vote is already their best
+      response, and <strong>unhappy</strong> (red ring) if switching would improve their payoff. When
+      every knight is happy at once, the votes form a <strong>Nash equilibrium</strong>.
+    </div>
+
+    <div class="equilibrium-banner" id="equilibriumBanner"></div>
+
+    <div class="election-result" id="electionResult"></div>
+
+    <div class="knights-grid" id="knightsGrid"></div>
+
+    <div class="history-title">Activity Log</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <div class="reset-buttons">
+      <button class="reset-btn" onclick="shufflePreferences()">Shuffle All Preferences</button>
+      <button class="reset-btn secondary" onclick="resetToDefaults()">Reset to Defaults</button>
+    </div>
+
+    <footer>
+      Based on the <strong>Five Knights</strong> game theory exercise created by <strong>Prof. Erich Prisner</strong><br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original applet (via Wayback Machine): <a href="https://web.archive.org/web/20170627155845/http://www.maa.org/sites/default/files/ebooks/Applet5Knights.html" target="_blank" rel="noopener noreferrer">web.archive.org</a><br />
+      Knight avatars are original icons made for this version, replacing the original letter-shaped face images.
+    </footer>
+  </div>
+
+  <script>
+    const KNIGHTS = ['A', 'B', 'C', 'D', 'E'];
+
+    const DEFAULT_PREFS = {
+      A: ['A', 'D', 'E', 'C', 'B'],
+      B: ['B', 'C', 'E', 'A', 'D'],
+      C: ['C', 'E', 'D', 'B', 'A'],
+      D: ['D', 'B', 'C', 'E', 'A'],
+      E: ['E', 'C', 'B', 'A', 'D']
+    };
+
+    const PAYOFF_TABLE = { 1: 2, 2: 1, 3: -1, 4: -2, 5: -3 };
+    const MOOD_HAPPY = '🙂';
+    const MOOD_UNHAPPY = '😠';
+
+    let prefs = {};
+    let choiceRank = {}; // which preference-rank (1-5) each knight currently votes for
+
+    function cloneDefaultPrefs() {
+      const p = {};
+      KNIGHTS.forEach(k => { p[k] = [...DEFAULT_PREFS[k]]; });
+      return p;
+    }
+
+    function resetToDefaults() {
+      prefs = cloneDefaultPrefs();
+      choiceRank = { A: 1, B: 1, C: 1, D: 1, E: 1 };
+      document.getElementById('historyLog').innerHTML = '';
+      logMove('Preferences reset to defaults.');
+      render();
+    }
+
+    function shufflePreferences() {
+      KNIGHTS.forEach(k => {
+        const arr = [...KNIGHTS];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        prefs[k] = arr;
+      });
+      choiceRank = { A: 1, B: 1, C: 1, D: 1, E: 1 };
+      logMove('All preferences shuffled.');
+      render();
+    }
+
+    function logMove(text) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function tally(overrideKnight, overrideRank) {
+      const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+      KNIGHTS.forEach(k => {
+        const rank = (k === overrideKnight) ? overrideRank : choiceRank[k];
+        const vote = prefs[k][rank - 1];
+        counts[vote]++;
+      });
+      return counts;
+    }
+
+    function electedFromCounts(counts) {
+      const entries = Object.entries(counts);
+      const max = Math.max(...entries.map(e => e[1]));
+      const winners = entries.filter(e => e[1] === max);
+      return winners.length === 1 ? winners[0][0] : 'Nobody';
+    }
+
+    function payoffFor(knight, elected) {
+      if (elected === 'Nobody') return 0;
+      const rank = prefs[knight].indexOf(elected) + 1;
+      return PAYOFF_TABLE[rank];
+    }
+
+    function hypotheticalPayoffs(knight) {
+      const arr = [];
+      for (let r = 1; r <= 5; r++) {
+        const counts = tally(knight, r);
+        const elected = electedFromCounts(counts);
+        arr.push(payoffFor(knight, elected));
+      }
+      return arr;
+    }
+
+    function castVote(knight, rank) {
+      if (choiceRank[knight] === rank) return;
+      choiceRank[knight] = rank;
+      const candidate = prefs[knight][rank - 1];
+      logMove(`Knight ${knight} now votes for ${candidate} (their #${rank} choice).`);
+      render();
+    }
+
+    function applyPrefs(knight) {
+      const inputs = document.querySelectorAll(`#prefInputs${knight} input`);
+      const errorEl = document.getElementById(`prefError${knight}`);
+      const values = Array.from(inputs).map(inp => inp.value.trim().toUpperCase());
+      const isValidSet = KNIGHTS.every(k => values.includes(k)) && values.length === 5;
+      if (!isValidSet) {
+        errorEl.innerText = 'Must contain each of A–E exactly once.';
+        return;
+      }
+      errorEl.innerText = '';
+      prefs[knight] = values;
+      logMove(`Knight ${knight}'s preference order updated to ${values.join(' > ')}.`);
+      render();
+    }
+
+    function render() {
+      const counts = tally(null, null);
+      const elected = electedFromCounts(counts);
+
+      // Election result panel
+      const resultDiv = document.getElementById('electionResult');
+      resultDiv.innerHTML = '';
+      KNIGHTS.forEach(k => {
+        const vc = document.createElement('div');
+        vc.className = 'vote-count';
+        vc.innerHTML = `<div class="count-num" style="color:var(--knight-${k})">${counts[k]}</div>Knight ${k}`;
+        resultDiv.appendChild(vc);
+      });
+      const electedLine = document.createElement('div');
+      electedLine.className = 'elected-line';
+      electedLine.innerText = elected === 'Nobody' ? 'Nobody is elected.' : `Knight ${elected} is elected!`;
+      resultDiv.appendChild(electedLine);
+
+      // Knight cards + happiness
+      const grid = document.getElementById('knightsGrid');
+      grid.innerHTML = '';
+      let allHappy = true;
+
+      KNIGHTS.forEach(k => {
+        const hyp = hypotheticalPayoffs(k);
+        const currentPayoff = hyp[choiceRank[k] - 1];
+        const bestPayoff = Math.max(...hyp);
+        const happy = currentPayoff === bestPayoff;
+        if (!happy) allHappy = false;
+
+        const card = document.createElement('div');
+        card.className = `knight-card ${k}`;
+
+        const header = document.createElement('div');
+        header.className = 'knight-header';
+        header.innerHTML = `
+          <div class="avatar-wrap">
+            <div class="avatar" style="--mood-color:${happy ? 'var(--happy)' : 'var(--unhappy)'}">
+              &#9822;<span class="badge">${k}</span>
+            </div>
+            <div class="mood">${happy ? MOOD_HAPPY : MOOD_UNHAPPY}</div>
+          </div>
+          <div>
+            <div class="knight-name">Knight ${k}</div>
+            <div class="knight-payoff">Payoff: ${currentPayoff}</div>
+          </div>
+        `;
+        card.appendChild(header);
+
+        const prefEditor = document.createElement('div');
+        prefEditor.className = 'pref-editor';
+        const inputsHtml = prefs[k].map(letter =>
+          `<input maxlength="1" value="${letter}">`
+        ).join('');
+        prefEditor.innerHTML = `
+          <div class="pref-label">Preferences (best &rarr; worst)</div>
+          <div class="pref-inputs" id="prefInputs${k}">${inputsHtml}</div>
+          <button class="apply-btn" onclick="applyPrefs('${k}')">Apply</button>
+          <div class="pref-error" id="prefError${k}"></div>
+        `;
+        card.appendChild(prefEditor);
+
+        const voteOptions = document.createElement('div');
+        voteOptions.className = 'vote-options';
+        for (let r = 1; r <= 5; r++) {
+          const candidate = prefs[k][r - 1];
+          const payoff = hyp[r - 1];
+          const selected = choiceRank[k] === r;
+          const payoffClass = payoff > 0 ? 'pos' : (payoff < 0 ? 'neg' : 'zero');
+          const opt = document.createElement('div');
+          opt.className = `vote-option ${selected ? 'selected' : ''}`;
+          opt.onclick = () => castVote(k, r);
+          opt.innerHTML = `
+            <span class="vo-label"><span class="radio-dot"></span>Vote ${candidate} (#${r})</span>
+            <span class="vo-payoff ${payoffClass}">${payoff > 0 ? '+' : ''}${payoff}</span>
+          `;
+          voteOptions.appendChild(opt);
+        }
+        card.appendChild(voteOptions);
+
+        grid.appendChild(card);
+      });
+
+      // Equilibrium banner
+      const banner = document.getElementById('equilibriumBanner');
+      if (allHappy) {
+        banner.className = 'equilibrium-banner yes';
+        banner.innerText = '✅ This is a Nash equilibrium — every knight is happy with their vote.';
+      } else {
+        banner.className = 'equilibrium-banner no';
+        banner.innerText = '⚠️ Not a Nash equilibrium — at least one knight could do better by switching their vote.';
+      }
+    }
+
+    resetToDefaults();
+  </script>
+</body>
+</html>
