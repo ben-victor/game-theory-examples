@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lisa's Game</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --value-1: #2563eb;
+      --value-2: #d97706;
+      --value-3: #dc2626;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .rules ul {
+      margin: 0.5rem 0 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .iq-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: rgba(0,0,0,0.2);
+      padding: 0.6rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .iq-control button {
+      border: none;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+    }
+
+    .iq-control button:hover {
+      opacity: 0.9;
+    }
+
+    .board-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .board {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      width: 34px;
+      height: 50px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      user-select: none;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+
+    .card.v1 { background-color: var(--value-1); }
+    .card.v2 { background-color: var(--value-2); }
+    .card.v3 { background-color: var(--value-3); }
+
+    .card.eliminated {
+      background-color: var(--disabled-card);
+      opacity: 0.15;
+    }
+
+    .card.top {
+      box-shadow: 0 0 0 3px var(--highlight);
+    }
+
+    .card.flash {
+      opacity: 0.15 !important;
+      transform: scale(0.85);
+    }
+
+    .moves {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .move-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+    }
+
+    .move-option .move-label {
+      font-size: 0.9rem;
+      line-height: 1.3;
+    }
+
+    .move-option .move-preview {
+      font-family: monospace;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .move-btn {
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .move-btn:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .move-btn:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 1.1rem;
+      min-height: 1.5em;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 420px) {
+      .card { width: 26px; height: 40px; font-size: 0.95rem; }
+      .move-option { flex-direction: column; align-items: flex-start; }
+      .move-btn { width: 100%; }
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>Lisa's Game</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> This is a variant, invented by Lisa Prisner, of the classic game of 'Nim'.
+      The board is a row of cards, each showing a 1, 2, or 3. Let <em>x</em> be the value of the current highlighted card on the board below. On your turn you may:
+      <ul>
+        <li><strong>Move 1:</strong> remove the first <em>x</em> cards (including the highlighted card).</li>
+        <li><strong>Move 2:</strong> remove every card up to (and including) the second-most-recent
+          card whose value is also <em>x</em>.</li>
+      </ul>
+      Turns alternate between the player and the computer. Whoever removes the last card <strong>loses</strong>.
+    </div>
+
+    <div class="scoreboard">
+      <div>Your Wins: <span id="playerScore">0</span></div>
+      <div>Computer Wins: <span id="cpuScore">0</span></div>
+    </div>
+
+    <div class="iq-control">
+      <span>Computer difficulty:</span>
+      <button onclick="changeIQ(-1)">&minus;</button>
+      <span id="iqLabel">4</span>
+      <button onclick="changeIQ(1)">+</button>
+    </div>
+
+    <div class="board-title">Board</div>
+    <div class="board" id="board"></div>
+
+    <div class="status-msg" id="statusMsg">Select a move!</div>
+
+    <div class="moves">
+      <div class="move-option">
+        <div class="move-label">Move 1 &mdash; remove:<br><span class="move-preview" id="preview1"></span></div>
+        <button class="move-btn" id="btnMove1" onclick="playerMove(1)">Play</button>
+      </div>
+      <div class="move-option">
+        <div class="move-label">Move 2 &mdash; remove:<br><span class="move-preview" id="preview2"></span></div>
+        <button class="move-btn" id="btnMove2" onclick="playerMove(2)">Play</button>
+      </div>
+    </div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <button class="reset-btn" onclick="newGame()">New Game</button>
+
+    <footer>
+      Based on <strong>Lisa's Game</strong>, invented by Lisa Prisner and originally programmed by
+      <strong>Prof. Erich Prisner</strong> (December 2000).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    const SIZE = 25;
+    let zahl = new Array(SIZE + 1);
+    let wohin1 = new Array(SIZE + 1);
+    let wohin2 = new Array(SIZE + 1);
+    let wertung = new Array(SIZE + 1);
+    let welcherZug = new Array(SIZE + 1);
+    let wobinich = SIZE;
+    let iq = 4;
+    let scores = { player: 0, cpu: 0 };
+    let isProcessing = false;
+    let gameOver = false;
+
+    function computeAnalysis() {
+      wertung[0] = 2;
+      for (let i = 1; i <= SIZE; i++) {
+        const x = zahl[i];
+        wohin1[i] = (i < x) ? 0 : i - x;
+        wohin2[i] = 0;
+        for (let j = 1; j < i; j++) {
+          if (zahl[i] === zahl[j]) wohin2[i] = j - 1;
+        }
+      }
+      for (let i = 1; i <= SIZE; i++) {
+        welcherZug[i] = 1;
+        wertung[i] = 1;
+        let k = wohin1[i];
+        if (wertung[k] === 1) {
+          wertung[i] = 2;
+          welcherZug[i] = 1;
+        }
+        k = wohin2[i];
+        if (wertung[k] === 1) {
+          wertung[i] = 2;
+          welcherZug[i] = 2;
+        }
+      }
+    }
+
+    function newGame() {
+      for (let i = 1; i <= SIZE; i++) {
+        zahl[i] = Math.floor(Math.random() * 3) + 1;
+      }
+      wobinich = SIZE;
+      computeAnalysis();
+      isProcessing = false;
+      gameOver = false;
+      document.getElementById('statusMsg').innerText = 'Your turn — select a move!';
+      document.getElementById('historyLog').innerHTML = '';
+      render();
+    }
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function previewValues(target) {
+      const arr = [];
+      for (let i = wobinich; i > target; i--) arr.push(zahl[i]);
+      return arr.join(' ');
+    }
+
+    function render() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      for (let i = SIZE; i >= 1; i--) {
+        const cell = document.createElement('div');
+        cell.id = 'cell' + i;
+        const active = i <= wobinich;
+        cell.className = `card ${active ? 'v' + zahl[i] : 'eliminated'}`;
+        if (active && i === wobinich) cell.classList.add('top');
+        cell.innerText = active ? zahl[i] : '';
+        board.appendChild(cell);
+      }
+
+      const p1 = previewValues(wohin1[wobinich]);
+      const p2 = previewValues(wohin2[wobinich]);
+      document.getElementById('preview1').innerText = p1 || '(nothing)';
+      document.getElementById('preview2').innerText = p2 || '(nothing)';
+
+      const disable = isProcessing || gameOver;
+      document.getElementById('btnMove1').disabled = disable;
+      document.getElementById('btnMove2').disabled = disable;
+      document.getElementById('iqLabel').innerText = iq;
+    }
+
+    function animateRemoval(from, to, callback) {
+      const indices = [];
+      for (let i = from; i > to; i--) indices.push(i);
+      let flashes = 0;
+      const maxFlashes = 4;
+      const interval = setInterval(() => {
+        indices.forEach(i => {
+          const el = document.getElementById('cell' + i);
+          if (el) el.classList.toggle('flash');
+        });
+        flashes++;
+        if (flashes >= maxFlashes) {
+          clearInterval(interval);
+          callback();
+        }
+      }, 150);
+    }
+
+    function playerMove(moveNum) {
+      if (isProcessing || gameOver) return;
+      const target = moveNum === 1 ? wohin1[wobinich] : wohin2[wobinich];
+      const removed = wobinich - target;
+      isProcessing = true;
+      document.getElementById('btnMove1').disabled = true;
+      document.getElementById('btnMove2').disabled = true;
+      logMove(`You removed ${removed} card${removed !== 1 ? 's' : ''} (${previewValues(target)}).`);
+      animateRemoval(wobinich, target, () => {
+        wobinich = target;
+        render();
+        if (wobinich === 0) {
+          endGame('cpu');
+        } else {
+          document.getElementById('statusMsg').innerText = 'Computer is thinking...';
+          setTimeout(computerMove, 500);
+        }
+      });
+    }
+
+    function computerMove() {
+      if (gameOver) return;
+      let moveNum;
+      if (iq * 3 < wobinich) {
+        moveNum = Math.random() < 0.5 ? 1 : 2;
+      } else {
+        moveNum = welcherZug[wobinich];
+      }
+      const target = moveNum === 1 ? wohin1[wobinich] : wohin2[wobinich];
+      const removed = wobinich - target;
+      logMove(`Computer removed ${removed} card${removed !== 1 ? 's' : ''} (${previewValues(target)}).`);
+      animateRemoval(wobinich, target, () => {
+        wobinich = target;
+        isProcessing = false;
+        render();
+        if (wobinich === 0) {
+          endGame('player');
+        } else {
+          document.getElementById('statusMsg').innerText = 'Your turn — select a move!';
+        }
+      });
+    }
+
+    function endGame(winner) {
+      gameOver = true;
+      isProcessing = true;
+      if (winner === 'player') {
+        scores.player++;
+        document.getElementById('statusMsg').innerText = 'You win! The computer removed the last card.';
+        logMove('Result: You win!', true);
+      } else {
+        scores.cpu++;
+        document.getElementById('statusMsg').innerText = 'Computer wins! You removed the last card.';
+        logMove('Result: Computer wins!', true);
+      }
+      document.getElementById('playerScore').innerText = scores.player;
+      document.getElementById('cpuScore').innerText = scores.cpu;
+      render();
+    }
+
+    function changeIQ(delta) {
+      iq = Math.min(6, Math.max(1, iq + delta));
+      document.getElementById('iqLabel').innerText = iq;
+    }
+
+    newGame();
+  </script>
+</body>
+</html>

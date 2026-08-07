@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nim</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --token-color: #2563eb;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .iq-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: rgba(0,0,0,0.2);
+      padding: 0.6rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .iq-control button {
+      border: none;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+    }
+
+    .iq-control button:hover {
+      opacity: 0.9;
+    }
+
+    .board-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .board {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .heap-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .heap-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      width: 56px;
+      flex-shrink: 0;
+    }
+
+    .heap-tokens {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .token {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background-color: var(--token-color);
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s, background-color 0.15s;
+    }
+
+    .token:hover:not(.locked) {
+      transform: translateY(-3px);
+    }
+
+    .token.pending {
+      background-color: var(--highlight);
+    }
+
+    .token.locked {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .token.flash {
+      opacity: 0.15 !important;
+      transform: scale(0.8);
+    }
+
+    .heap-empty {
+      font-size: 0.85rem;
+      color: #475569;
+      font-style: italic;
+    }
+
+    .selection-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: rgba(250, 204, 21, 0.08);
+      border: 1px solid var(--highlight);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      min-height: 1.4em;
+    }
+
+    .selection-bar.empty {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed #334155;
+      color: #64748b;
+      justify-content: center;
+    }
+
+    .selection-bar .buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .selection-bar button {
+      border: none;
+      border-radius: 8px;
+      padding: 0.4rem 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .selection-bar .confirm-btn {
+      background: var(--accent);
+      color: #0f172a;
+    }
+
+    .selection-bar .cancel-btn {
+      background: var(--disabled-card);
+      color: #f8fafc;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 1.1rem;
+      min-height: 1.5em;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 420px) {
+      .token { width: 24px; height: 24px; }
+      .heap-label { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>Nim</h1>
+
+    <div class="rules">
+      Nim is one of the oldest known combinatorial games. Its name is due to Charles L. Bouton, who formally analyzed and developed a complete theory of the game in the early 1900s.
+      <br><br>
+      <strong>Rules: </strong>There are several heaps of tokens. On your turn, pick <strong>one</strong>
+      heap and remove <strong>one or more</strong> tokens from it — you can't touch any other heap that
+      turn.
+      <br><br>
+      <strong>Whoever removes the last token wins.</strong>
+      <br><br>
+      Turns alternate between the player and the computer.
+      <br><br>
+      Tap a token to preview a move: it selects that token and every token after it in the same heap.
+      Confirm to remove them.
+    </div>
+
+    <div class="scoreboard">
+      <div>Your Wins: <span id="playerScore">0</span></div>
+      <div>Computer Wins: <span id="cpuScore">0</span></div>
+    </div>
+
+    <div class="iq-control">
+      <span>Computer difficulty:</span>
+      <button onclick="changeIQ(-1)">&minus;</button>
+      <span id="iqLabel">4</span>
+      <button onclick="changeIQ(1)">+</button>
+    </div>
+
+    <div class="board-title">Heaps</div>
+    <div class="board" id="board"></div>
+
+    <div class="selection-bar empty" id="selectionBar">Tap a token to select a move</div>
+
+    <div class="status-msg" id="statusMsg">Your turn — tap a token!</div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <button class="reset-btn" onclick="newGame()">New Game</button>
+
+    <footer>
+      Nim is a traditional combinatorial game with no single known inventor; its winning-strategy theory
+      was published by Charles L. Bouton (1901).<br />
+    </footer>
+  </div>
+
+  <script>
+    const MIN_HEAPS = 3;
+    const MAX_HEAPS = 4;
+    const MIN_SIZE = 1;
+    const MAX_SIZE = 7;
+
+    let heaps = [];
+    let iq = 4;
+    let scores = { player: 0, cpu: 0 };
+    let isProcessing = false;
+    let gameOver = false;
+    let pending = null; // { heap, pos } - pos is 1-indexed position clicked
+
+    function newGame() {
+      const numHeaps = Math.floor(Math.random() * (MAX_HEAPS - MIN_HEAPS + 1)) + MIN_HEAPS;
+      heaps = [];
+      for (let i = 0; i < numHeaps; i++) {
+        heaps.push(Math.floor(Math.random() * (MAX_SIZE - MIN_SIZE + 1)) + MIN_SIZE);
+      }
+      isProcessing = false;
+      gameOver = false;
+      pending = null;
+      document.getElementById('statusMsg').innerText = 'Your turn — tap a token!';
+      document.getElementById('historyLog').innerHTML = '';
+      render();
+    }
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function totalTokens() {
+      return heaps.reduce((a, b) => a + b, 0);
+    }
+
+    function render() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      heaps.forEach((size, h) => {
+        const row = document.createElement('div');
+        row.className = 'heap-row';
+
+        const label = document.createElement('div');
+        label.className = 'heap-label';
+        label.innerText = `Heap ${h + 1} (${size})`;
+        row.appendChild(label);
+
+        const tokensWrap = document.createElement('div');
+        tokensWrap.className = 'heap-tokens';
+
+        if (size === 0) {
+          const empty = document.createElement('span');
+          empty.className = 'heap-empty';
+          empty.innerText = 'empty';
+          tokensWrap.appendChild(empty);
+        } else {
+          for (let p = 1; p <= size; p++) {
+            const tok = document.createElement('div');
+            tok.id = `tok-${h}-${p}`;
+            const locked = isProcessing || gameOver;
+            tok.className = 'token' + (locked ? ' locked' : '');
+            if (pending && pending.heap === h && p >= pending.pos) {
+              tok.classList.add('pending');
+            }
+            if (!locked) {
+              tok.onclick = () => selectToken(h, p);
+            }
+            tokensWrap.appendChild(tok);
+          }
+        }
+
+        row.appendChild(tokensWrap);
+        board.appendChild(row);
+      });
+
+      renderSelectionBar();
+    }
+
+    function renderSelectionBar() {
+      const bar = document.getElementById('selectionBar');
+      if (!pending) {
+        bar.className = 'selection-bar empty';
+        bar.innerHTML = 'Tap a token to select a move';
+        return;
+      }
+      const count = heaps[pending.heap] - pending.pos + 1;
+      bar.className = 'selection-bar';
+      bar.innerHTML = `
+        <span>Remove <strong>${count}</strong> token${count !== 1 ? 's' : ''} from Heap ${pending.heap + 1}?</span>
+        <span class="buttons">
+          <button class="confirm-btn" onclick="confirmMove()">Confirm</button>
+          <button class="cancel-btn" onclick="cancelSelection()">Cancel</button>
+        </span>
+      `;
+    }
+
+    function selectToken(heap, pos) {
+      if (isProcessing || gameOver) return;
+      pending = { heap, pos };
+      render();
+    }
+
+    function cancelSelection() {
+      pending = null;
+      render();
+    }
+
+    function animateRemoval(heap, fromPos, toPos, callback) {
+      const indices = [];
+      for (let p = fromPos; p <= toPos; p++) indices.push(p);
+      let flashes = 0;
+      const maxFlashes = 4;
+      const interval = setInterval(() => {
+        indices.forEach(p => {
+          const el = document.getElementById(`tok-${heap}-${p}`);
+          if (el) el.classList.toggle('flash');
+        });
+        flashes++;
+        if (flashes >= maxFlashes) {
+          clearInterval(interval);
+          callback();
+        }
+      }, 150);
+    }
+
+    function confirmMove() {
+      if (!pending || isProcessing || gameOver) return;
+      const { heap, pos } = pending;
+      const size = heaps[heap];
+      const count = size - pos + 1;
+      isProcessing = true;
+      logMove(`You removed ${count} token${count !== 1 ? 's' : ''} from Heap ${heap + 1}.`);
+      pending = null;
+      render();
+      animateRemoval(heap, pos, size, () => {
+        heaps[heap] = pos - 1;
+        render();
+        if (totalTokens() === 0) {
+          endGame('player');
+        } else {
+          document.getElementById('statusMsg').innerText = 'Computer is thinking...';
+          setTimeout(computerMove, 500);
+        }
+      });
+    }
+
+    function computerMove() {
+      if (gameOver) return;
+      const total = totalTokens();
+      let heapIdx, removeCount;
+
+      if (iq * 3 < total) {
+        const nonEmpty = heaps.map((h, i) => i).filter(i => heaps[i] > 0);
+        heapIdx = nonEmpty[Math.floor(Math.random() * nonEmpty.length)];
+        removeCount = Math.floor(Math.random() * heaps[heapIdx]) + 1;
+      } else {
+        const nimSum = heaps.reduce((a, b) => a ^ b, 0);
+        if (nimSum !== 0) {
+          for (let i = 0; i < heaps.length; i++) {
+            const target = heaps[i] ^ nimSum;
+            if (target < heaps[i]) {
+              heapIdx = i;
+              removeCount = heaps[i] - target;
+              break;
+            }
+          }
+        } else {
+          const nonEmpty = heaps.map((h, i) => i).filter(i => heaps[i] > 0);
+          heapIdx = nonEmpty[Math.floor(Math.random() * nonEmpty.length)];
+          removeCount = 1;
+        }
+      }
+
+      const size = heaps[heapIdx];
+      const fromPos = size - removeCount + 1;
+      logMove(`Computer removed ${removeCount} token${removeCount !== 1 ? 's' : ''} from Heap ${heapIdx + 1}.`);
+      animateRemoval(heapIdx, fromPos, size, () => {
+        heaps[heapIdx] = fromPos - 1;
+        isProcessing = false;
+        render();
+        if (totalTokens() === 0) {
+          endGame('cpu');
+        } else {
+          document.getElementById('statusMsg').innerText = 'Your turn — tap a token!';
+        }
+      });
+    }
+
+    function endGame(winner) {
+      gameOver = true;
+      isProcessing = true;
+      if (winner === 'player') {
+        scores.player++;
+        document.getElementById('statusMsg').innerText = 'You win! You took the last token.';
+        logMove('Result: You win!', true);
+      } else {
+        scores.cpu++;
+        document.getElementById('statusMsg').innerText = 'Computer wins! It took the last token.';
+        logMove('Result: Computer wins!', true);
+      }
+      document.getElementById('playerScore').innerText = scores.player;
+      document.getElementById('cpuScore').innerText = scores.cpu;
+      render();
+    }
+
+    function changeIQ(delta) {
+      iq = Math.min(6, Math.max(1, iq + delta));
+      document.getElementById('iqLabel').innerText = iq;
+    }
+
+    newGame();
+  </script>
+</body>
+</html>

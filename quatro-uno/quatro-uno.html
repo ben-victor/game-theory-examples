@@ -195,19 +195,37 @@
     footer a:hover {
       text-decoration: underline;
     }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
     <h1>Quatro-Uno</h1>
     
     <div class="rules">
-      <strong>Rules:</strong> Both players start with cards 1, 2, 3, 4. 
-      Higher card wins and returns to hand. Loser discards. 
-      <em>Ties discard both.</em> 
-      <br><strong>Special rule:</strong> When 1 faces 4, both cards are discarded.
-      <br>First to lose all cards loses the match.
+      <strong>Rules:</strong> Both players start with cards 1, 2, 3, 4 in their hand. On each play, both players select one of their own cards. The two selections are compared.
+      <br><br>The player whose selected card has the higher value wins the round, and that card returns to their hand. The losing player discards the card they played.
+      <br><br>In the event of a tie, both cards are discarded.
+      <br><br><strong>Special rule:</strong> When 1 faces 4, both cards are discarded.
+      <br><br>The first player to discard all of their cards loses the game.
+      <br><br>The game ends in a draw if both players discard their last card at the same time.
+      <br><br>Turns alternate between the player and the computer.
     </div>
 
     <div class="scoreboard">
