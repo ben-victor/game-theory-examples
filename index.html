@@ -33,6 +33,19 @@
   h1 a:hover {
   	text-decoration-thickness: 2px; /* Makes underline thicker on hover */
   }
+    h2.section-heading {
+      color: var(--accent);
+      width: 100%;
+      max-width: 800px;
+      margin: 2.5rem 0 1rem 0;
+      font-size: 1.3rem;
+      border-top: 1px solid #334155;
+      padding-top: 2rem;
+    }
+    .section-heading:first-of-type {
+      border-top: none;
+      padding-top: 0;
+    }
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -77,6 +90,39 @@
       background: var(--card-bg);
       color: var(--text);
       font-size: 1rem;
+    }
+    /* Spreadsheet download cards reuse the game-card look, with a small
+       file-type badge and download icon instead of a description-only card */
+    .sheet-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .sheet-icon {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+    .sheet-info {
+      min-width: 0;
+    }
+    .sheet-title {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+    .sheet-desc {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -148,9 +194,60 @@ By Erich Prisner, MAA (2012), Original website: <a href="http://eprisner.de/MAT1
 
   </div>
 
+  <h2 class="section-heading">Downloadable Spreadsheets</h2>
+
+  <div class="games-grid">
+
+    <!-- Non-zero-sum game solver -->
+    <a href="./Spreadsheets/SIMnonzero.xlsx" class="game-card sheet-card" download>
+      <div class="sheet-icon">📊</div>
+      <div class="sheet-info">
+        <div class="sheet-title">SIM: Non-Zero-Sum Games</div>
+        <div class="sheet-desc">Enter a bimatrix game and see maximin, weak dominance, best response, and pure Nash analysis.</div>
+      </div>
+    </a>
+
+    <!-- Zero-sum variant -->
+    <a href="./Spreadsheets/SIMzero.xlsx" class="game-card sheet-card" download>
+      <div class="sheet-icon">📊</div>
+      <div class="sheet-info">
+        <div class="sheet-title">SIM: Zero-Sum Games</div>
+        <div class="sheet-desc">The same analysis toolkit, for zero-sum games, plus a mixed-strategy sheet.</div>
+      </div>
+    </a>
+
+    <!-- 3-player game, 2 options -->
+    <a href="./Spreadsheets/SIM3.xlsx" class="game-card sheet-card" download>
+      <div class="sheet-icon">📊</div>
+      <div class="sheet-info">
+        <div class="sheet-title">SIM3: 3-Player Games</div>
+        <div class="sheet-desc">A simultaneous game for three players, each choosing between two options.</div>
+      </div>
+    </a>
+
+    <!-- 3-player game, 3 options -->
+    <a href="./Spreadsheets/SIM33.xlsx" class="game-card sheet-card" download>
+      <div class="sheet-icon">📊</div>
+      <div class="sheet-info">
+        <div class="sheet-title">SIM33: 3-Player Games</div>
+        <div class="sheet-desc">Same as SIM3, but each of the three players now has three options.</div>
+      </div>
+    </a>
+
+    <!-- Exercises workbook -->
+    <a href="./Spreadsheets/Exercises.xlsx" class="game-card sheet-card" download>
+      <div class="sheet-icon">📝</div>
+      <div class="sheet-info">
+        <div class="sheet-title">Exercises</div>
+        <div class="sheet-desc">Nine practice games and payoff matrices to work through by hand.</div>
+      </div>
+    </a>
+
+  </div>
+
 <script>
 const filter = document.getElementById("category-filter");
-const cards = document.querySelectorAll(".game-card");
+const cards = document.querySelectorAll(".games-grid .game-card[data-category]");
 
 filter.addEventListener("change", () => {
   const category = filter.value;
