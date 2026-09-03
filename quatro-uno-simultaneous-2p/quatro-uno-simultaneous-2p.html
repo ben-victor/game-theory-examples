@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simultaneous Quatro-Uno (Two Players)</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --value-1: #2563eb;
+      --value-2: #d97706;
+      --value-3: #dc2626;
+      --value-4: #16a34a;
+      --ann-color: #2563eb;
+      --beth-color: #dc2626;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .rules ul {
+      margin: 0.5rem 0 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 1.05rem;
+      min-height: 1.5em;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .selection-panels {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .selection-panel {
+      flex: 1;
+      border-radius: 10px;
+      padding: 0.9rem;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .selection-panel.ann { box-shadow: inset 4px 0 0 var(--ann-color); }
+    .selection-panel.beth { box-shadow: inset 4px 0 0 var(--beth-color); }
+
+    .selection-panel h3 {
+      margin: 0 0 0.6rem 0;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .selection-panel.ann h3 { color: var(--ann-color); }
+    .selection-panel.beth h3 { color: var(--beth-color); }
+
+    .selection-title, .pile-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+
+    .selection-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .built-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .card {
+      width: 44px;
+      height: 66px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #fff;
+      user-select: none;
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    }
+
+    .card.v1 { background-color: var(--value-1); }
+    .card.v2 { background-color: var(--value-2); }
+    .card.v3 { background-color: var(--value-3); }
+    .card.v4 { background-color: var(--value-4); }
+
+    .card.clickable {
+      cursor: pointer;
+    }
+
+    .card.clickable:hover {
+      transform: translateY(-4px);
+    }
+
+    .card.empty-slot {
+      background: transparent;
+      border: 2px dashed #334155;
+      color: #475569;
+      font-size: 0.85rem;
+    }
+
+    .card.discarded {
+      opacity: 0.25;
+      transform: scale(0.9);
+    }
+
+    .card.active {
+      box-shadow: 0 0 0 3px var(--highlight);
+    }
+
+    .piles-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .pile-block {
+      margin-bottom: 1.2rem;
+    }
+
+    .pile-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .duel-arena {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.2rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+      min-height: 100px;
+    }
+
+    .duel-arena .card {
+      width: 54px;
+      height: 80px;
+      font-size: 1.6rem;
+    }
+
+    .duel-vs {
+      font-size: 1.3rem;
+      color: #64748b;
+      font-weight: bold;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+
+    .reset-btn:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 460px) {
+      .selection-panels { flex-direction: column; }
+      .card { width: 38px; height: 56px; font-size: 1.1rem; }
+      .duel-arena .card { width: 46px; height: 68px; font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>Simultaneous Quatro-Uno (Two Players)</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> Ann and Beth each have the cards 1, 2, 3, 4, and each secretly arranges
+      their four cards into a pile, front to back — a single blind decision, not something either can
+      react to.
+      <ul>
+        <li>Each round, both piles reveal their <strong>front</strong> card.</li>
+        <li>The <strong>higher</strong> card wins and stays at the front to guard again next round; the lower one is discarded.</li>
+        <li><strong>Equal cards</strong> are both discarded.</li>
+        <li><strong>Special rule:</strong> a 1 facing a 4 also discards both, even though 4 is higher.</li>
+      </ul>
+      Whoever's pile empties first <strong>loses</strong>.
+      <br><br>
+      This is a two-player, take-turns-on-one-screen tool — like the original applet, it works best if
+      Ann and Beth each decide their order privately (away from the screen, or written down) before one
+      of you enters both piles below, so neither sees the other's order in advance.
+    </div>
+
+    <div class="scoreboard">
+      <div>Ann: <span id="annScore">0</span></div>
+      <div>Beth: <span id="bethScore">0</span></div>
+      <div>Draws: <span id="drawScore">0</span></div>
+    </div>
+
+    <div class="status-msg" id="statusMsg">Both players: choose your card order, left to right.</div>
+
+    <div id="selectionArea">
+      <div class="selection-panels">
+        <div class="selection-panel ann">
+          <h3>Ann</h3>
+          <div class="selection-title">Click to add to pile</div>
+          <div class="selection-row" id="annSelectionRow"></div>
+          <div class="built-row" id="annBuiltRow"></div>
+        </div>
+        <div class="selection-panel beth">
+          <h3>Beth</h3>
+          <div class="selection-title">Click to add to pile</div>
+          <div class="selection-row" id="bethSelectionRow"></div>
+          <div class="built-row" id="bethBuiltRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="duel-arena" id="duelArena" style="display:none;">
+      <div class="card v1" id="duelAnnCard">?</div>
+      <div class="duel-vs">VS</div>
+      <div class="card v1" id="duelBethCard">?</div>
+    </div>
+
+    <div class="piles-section" id="pilesSection" style="display:none;">
+      <div class="pile-block">
+        <div class="pile-title">Ann's Pile (front → back)</div>
+        <div class="pile-row" id="annPileRow"></div>
+      </div>
+      <div class="pile-block">
+        <div class="pile-title">Beth's Pile (front → back)</div>
+        <div class="pile-row" id="bethPileRow"></div>
+      </div>
+    </div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <button class="reset-btn" id="newGameBtn" onclick="newGame()">New Game</button>
+
+    <footer>
+      Based on <strong>Simultaneous Quatro-Uno</strong>, a game theory exercise created by
+      <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    let annAvailable = [];
+    let bethAvailable = [];
+    let annOrder = [];
+    let bethOrder = [];
+    let annFront = 0;
+    let bethFront = 0;
+    let phase = 'selecting'; // 'selecting' | 'battling' | 'done'
+    let scores = { ann: 0, beth: 0, draw: 0 };
+
+    function newGame() {
+      annAvailable = [1, 2, 3, 4];
+      bethAvailable = [1, 2, 3, 4];
+      annOrder = [];
+      bethOrder = [];
+      annFront = 0;
+      bethFront = 0;
+      phase = 'selecting';
+      document.getElementById('historyLog').innerHTML = '';
+      document.getElementById('duelArena').style.display = 'none';
+      document.getElementById('pilesSection').style.display = 'none';
+      document.getElementById('selectionArea').style.display = '';
+      document.getElementById('statusMsg').innerText = 'Both players: choose your card order, left to right.';
+      render();
+    }
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function selectCard(who, v) {
+      if (phase !== 'selecting') return;
+      const available = who === 'ann' ? annAvailable : bethAvailable;
+      const order = who === 'ann' ? annOrder : bethOrder;
+      if (!available.includes(v)) return;
+
+      if (who === 'ann') {
+        annAvailable = annAvailable.filter(x => x !== v);
+        annOrder.push(v);
+      } else {
+        bethAvailable = bethAvailable.filter(x => x !== v);
+        bethOrder.push(v);
+      }
+      render();
+
+      if (annOrder.length === 4 && bethOrder.length === 4) {
+        phase = 'battling';
+        document.getElementById('selectionArea').style.display = 'none';
+        document.getElementById('duelArena').style.display = 'flex';
+        document.getElementById('pilesSection').style.display = '';
+        document.getElementById('newGameBtn').disabled = true;
+        logMove(`Ann chose ${annOrder.join('')}, Beth chose ${bethOrder.join('')}.`);
+        render();
+        setTimeout(playRound, 700);
+      }
+    }
+
+    function playRound() {
+      if (annFront === 4 || bethFront === 4) { endGame(); return; }
+      document.getElementById('statusMsg').innerText = 'Revealing front cards...';
+      render();
+      setTimeout(resolveRound, 700);
+    }
+
+    function resolveRound() {
+      const a = annOrder[annFront];
+      const b = bethOrder[bethFront];
+      let resultText;
+
+      if (a === b) {
+        resultText = `Both show ${a} — tie, both cards are discarded.`;
+        annFront++;
+        bethFront++;
+      } else if (Math.abs(a - b) === 3) {
+        resultText = `${a} faces ${b} — the special 1-vs-4 rule discards both.`;
+        annFront++;
+        bethFront++;
+      } else if (a > b) {
+        resultText = `Ann's ${a} beats Beth's ${b} — Ann's card stays on guard.`;
+        bethFront++;
+      } else {
+        resultText = `Beth's ${b} beats Ann's ${a} — Beth's card stays on guard.`;
+        annFront++;
+      }
+
+      document.getElementById('statusMsg').innerText = resultText;
+      logMove(resultText);
+      render();
+
+      setTimeout(() => {
+        if (annFront === 4 || bethFront === 4) {
+          endGame();
+        } else {
+          playRound();
+        }
+      }, 700);
+    }
+
+    function endGame() {
+      phase = 'done';
+      document.getElementById('newGameBtn').disabled = false;
+      document.getElementById('duelArena').style.display = 'none';
+
+      if (annFront === 4 && bethFront === 4) {
+        scores.draw++;
+        document.getElementById('statusMsg').innerText = "It's a draw! Both piles emptied at once.";
+        logMove('Result: Draw!', true);
+      } else if (annFront === 4) {
+        scores.beth++;
+        document.getElementById('statusMsg').innerText = "Beth wins! Ann's pile ran out first.";
+        logMove('Result: Beth wins!', true);
+      } else {
+        scores.ann++;
+        document.getElementById('statusMsg').innerText = "Ann wins! Beth's pile ran out first.";
+        logMove('Result: Ann wins!', true);
+      }
+      render();
+    }
+
+    function renderSelectionSide(who) {
+      const available = who === 'ann' ? annAvailable : bethAvailable;
+      const order = who === 'ann' ? annOrder : bethOrder;
+      const selRow = document.getElementById(who === 'ann' ? 'annSelectionRow' : 'bethSelectionRow');
+      const builtRow = document.getElementById(who === 'ann' ? 'annBuiltRow' : 'bethBuiltRow');
+
+      selRow.innerHTML = '';
+      [1, 2, 3, 4].forEach(v => {
+        const el = document.createElement('div');
+        const has = available.includes(v);
+        el.className = `card v${v} ${has ? 'clickable' : 'discarded'}`;
+        el.innerText = v;
+        if (has) el.onclick = () => selectCard(who, v);
+        selRow.appendChild(el);
+      });
+
+      builtRow.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const el = document.createElement('div');
+        const v = order[i];
+        if (v === undefined) {
+          el.className = 'card empty-slot';
+          el.innerText = '';
+        } else {
+          el.className = `card v${v}`;
+          el.innerText = v;
+        }
+        builtRow.appendChild(el);
+      }
+    }
+
+    function renderPileRow(order, front, elementId) {
+      const row = document.getElementById(elementId);
+      row.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const el = document.createElement('div');
+        const v = order[i];
+        if (i < front) {
+          el.className = `card v${v} discarded`;
+          el.innerText = v;
+        } else if (i === front) {
+          el.className = `card v${v} active`;
+          el.innerText = v;
+        } else {
+          el.className = `card v${v}`;
+          el.innerText = v;
+        }
+        row.appendChild(el);
+      }
+    }
+
+    function render() {
+      document.getElementById('annScore').innerText = scores.ann;
+      document.getElementById('bethScore').innerText = scores.beth;
+      document.getElementById('drawScore').innerText = scores.draw;
+
+      renderSelectionSide('ann');
+      renderSelectionSide('beth');
+
+      if (phase === 'battling') {
+        const av = annOrder[annFront];
+        const bv = bethOrder[bethFront];
+        const annCard = document.getElementById('duelAnnCard');
+        const bethCard = document.getElementById('duelBethCard');
+        annCard.className = `card v${av} active`;
+        annCard.innerText = av;
+        bethCard.className = `card v${bv} active`;
+        bethCard.innerText = bv;
+
+        renderPileRow(annOrder, annFront, 'annPileRow');
+        renderPileRow(bethOrder, bethFront, 'bethPileRow');
+      } else if (phase === 'done') {
+        renderPileRow(annOrder, annFront, 'annPileRow');
+        renderPileRow(bethOrder, bethFront, 'bethPileRow');
+      }
+    }
+
+    newGame();
+  </script>
+</body>
+</html>

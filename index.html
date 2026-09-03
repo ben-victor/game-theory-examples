@@ -136,6 +136,8 @@ By Erich Prisner, MAA (2012), Original website: <a href="http://eprisner.de/MAT1
       <select id="category-filter">
         <option value="all">All applets</option>
         <option value="chapter2">Chapter 2</option>
+        <option value="chapter6">Chapter 6</option>
+        <option value="chapter6">Chapter 8</option>
         <option value="new">New Applets</option>
       </select>
     </div>
@@ -182,6 +184,30 @@ By Erich Prisner, MAA (2012), Original website: <a href="http://eprisner.de/MAT1
     <a href="./five-knights-random/five-knights-random.html" class="game-card" data-category="chapter2">
       <div class="game-title">Five Knights (Random)</div>
       <div class="game-desc">Five Knights with randomized starting preferences, including a "big-ego" mode.</div>
+    </a>
+
+    <!-- Simultaneous Quatro-Uno Link -->
+    <a href="./quatro-uno-simultaneous/quatro-uno-simultaneous.html" class="game-card" data-category="chapter6">
+      <div class="game-title">Simultaneous Quatro-Uno</div>
+      <div class="game-desc">Blindly commit your card order against the computer's optimal mixed strategy.</div>
+    </a>
+
+    <!-- Simultaneous Quatro-Uno (2P) Link -->
+    <a href="./quatro-uno-simultaneous-2p/quatro-uno-simultaneous-2p.html" class="game-card" data-category="chapter6">
+      <div class="game-title">Simultaneous Quatro-Uno (2P)</div>
+      <div class="game-desc">The blind pile-ordering version of Quatro-Uno, played hotseat between two people.</div>
+    </a>
+
+    <!-- NIM(n) Link -->
+    <a href="./nim-n/nim-n.html" class="game-card" data-category="chapter8">
+      <div class="game-title">NIM(n)</div>
+      <div class="game-desc">Take one or two coins from a single row — a two-player hotseat classic.</div>
+    </a>
+
+    <!-- NIM(n) vs Computer Link -->
+    <a href="./nim-n-vs-computer/nim-n-vs-computer.html" class="game-card" data-category="chapter8">
+      <div class="game-title">NIM(n) vs Computer</div>
+      <div class="game-desc">Take one or two stones from a row against a computer playing the optimal mod-3 strategy.</div>
     </a>
 
     <!-- Add future games below by linking to their folder names -->
@@ -234,6 +260,24 @@ By Erich Prisner, MAA (2012), Original website: <a href="http://eprisner.de/MAT1
       </div>
     </a>
 
+    <!-- Rec the Square Link -->
+    <a href="./rec-the-square-3/rec-the-square-3.html" class="game-card" data-category="chapter8">
+      <div class="game-title">Rec the Square</div>
+      <div class="game-desc">Place dominoes on a 3×3 board — scored both as a win/lose game and as "Creating Holes."</div>
+    </a>
+
+    <!-- Two-Item Auction Link -->
+    <a href="./auction-game-2/auction-game-2.html" class="game-card" data-category="chapter8">
+      <div class="game-title">Auction Game 2</div>
+      <div class="game-desc">Known values, known order — and real bankruptcy risk if you overbid.</div>
+    </a>
+
+    <!-- Three-Item Auction Link -->
+    <a href="./auction-game-3/auction-game-3.html" class="game-card" data-category="chapter8">
+      <div class="game-title">Auction Game 3</div>
+      <div class="game-desc">The known-values auction, extended to three paintings.</div>
+    </a>
+
     <!-- Exercises workbook -->
     <a href="./Spreadsheets/Exercises.xlsx" class="game-card sheet-card" download>
       <div class="sheet-icon">📝</div>
@@ -244,7 +288,7 @@ By Erich Prisner, MAA (2012), Original website: <a href="http://eprisner.de/MAT1
     </a>
 
   </div>
-
+  
 <script>
 const filter = document.getElementById("category-filter");
 const cards = document.querySelectorAll(".games-grid .game-card[data-category]");

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIM(n) vs Computer</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .turn-banner {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      min-height: 1.6em;
+      margin-bottom: 1.5rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .turn-banner.win {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .turn-banner.lose {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+    }
+
+    .coin-track {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      margin-bottom: 1.5rem;
+      min-height: 100px;
+      align-items: center;
+    }
+
+    .coin {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #e2e8f0, #64748b 70%);
+      border: 3px solid #475569;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    .coin.clickable {
+      cursor: pointer;
+    }
+
+    .coin.preview {
+      transform: translateY(-6px);
+      box-shadow: 0 0 0 3px var(--highlight), 0 6px 10px rgba(0,0,0,0.4);
+    }
+
+    .coin.computer-preview {
+      transform: translateY(-6px);
+      box-shadow: 0 0 0 3px #f87171, 0 6px 10px rgba(0,0,0,0.4);
+    }
+
+    .coin.gone {
+      opacity: 0.15;
+      transform: scale(0.7);
+    }
+
+    .size-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .size-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .size-controls input {
+      width: 60px;
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .size-controls button {
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+    }
+
+    .size-controls button:hover {
+      opacity: 0.9;
+    }
+
+    .size-error {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #f87171;
+      min-height: 1.2em;
+      margin-bottom: 1rem;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 420px) {
+      .coin { width: 42px; height: 42px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../" class="back-link">&larr; Back to Games</a>
+    <h1>NIM(n) vs Computer</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> NIM(n) is played by two players, who alternate removing <strong>one or
+      two</strong> stones from a single row of originally <em>n</em> stones. Only the stones at the
+      right-hand end are ever available — tap the last stone to remove one, or the second-to-last stone
+      to remove that one along with the last. Whoever cannot move because no stones are left
+      <strong>loses</strong> (equivalently: whoever takes the last stone wins). You move first, and the
+      row can start with anywhere from 4 to 11 stones.
+      <br><br>
+      The computer plays optimally whenever it can: it always leaves a multiple of 3 stones behind,
+      which is a guaranteed win with correct play. If it's ever forced to move from a multiple of 3
+      itself, the position is already lost regardless of what it does, so it picks between one and two
+      at random.
+    </div>
+
+    <div class="scoreboard">
+      <div>You: <span id="playerScore">0</span></div>
+      <div>Computer: <span id="computerScore">0</span></div>
+    </div>
+
+    <div class="turn-banner" id="turnBanner">Your move</div>
+
+    <div class="coin-track" id="coinTrack"></div>
+
+    <div class="size-title">Start a new row</div>
+    <div class="size-controls">
+      <span>Start with</span>
+      <input type="number" id="sizeInput" min="4" max="11" value="7">
+      <span>stones</span>
+      <button onclick="handleStart()">Start</button>
+    </div>
+    <div class="size-error" id="sizeError"></div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <footer>
+      Based on <strong>NIM(n) against the Computer</strong>, a game theory exercise created by
+      <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    const MIN_SIZE = 4;
+    const MAX_SIZE = 11;
+
+    let startSize = 7;
+    let coins = startSize;
+    let turn = 'you'; // 'you' | 'computer'
+    let gameOver = false;
+    let previewCount = 0;
+    let computerThinking = false;
+    let scores = { you: 0, computer: 0 };
+    let round = 1;
+
+    function handleStart() {
+      const val = parseInt(document.getElementById('sizeInput').value, 10);
+      const errorEl = document.getElementById('sizeError');
+      if (isNaN(val) || val < MIN_SIZE || val > MAX_SIZE) {
+        errorEl.innerText = `Please enter a number from ${MIN_SIZE} to ${MAX_SIZE}.`;
+        return;
+      }
+      errorEl.innerText = '';
+      start(val);
+    }
+
+    function start(n) {
+      startSize = n;
+      coins = n;
+      turn = 'you';
+      gameOver = false;
+      previewCount = 0;
+      computerThinking = false;
+      document.getElementById('sizeInput').value = n;
+      document.getElementById('historyLog').innerHTML = '';
+      logMove(`Round ${round}: new row of ${n} stones. Your move.`);
+      render();
+    }
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function removeCoins(n) {
+      if (gameOver || computerThinking) return;
+      if (n > coins) return;
+      const mover = turn;
+      coins -= n;
+      previewCount = 0;
+      logMove(`${mover === 'you' ? 'You remove' : 'Computer removes'} ${n} stone${n !== 1 ? 's' : ''} (${coins} left).`);
+
+      if (coins === 0) {
+        gameOver = true;
+        scores[mover]++;
+        document.getElementById(mover === 'you' ? 'playerScore' : 'computerScore').innerText = scores[mover];
+        logMove(`Round ${round}: ${mover === 'you' ? 'You win' : 'Computer wins'}!`, true);
+        round++;
+        render();
+        return;
+      }
+
+      turn = mover === 'you' ? 'computer' : 'you';
+      render();
+
+      if (turn === 'computer') {
+        setTimeout(computerMove, 600);
+      }
+    }
+
+    function computerMove() {
+      if (gameOver) return;
+      computerThinking = true;
+      const take = (coins % 3 === 0) ? (Math.random() < 0.5 ? 1 : 2) : (coins % 3);
+      previewCount = take;
+      render();
+      setTimeout(() => {
+        computerThinking = false;
+        removeCoins(take);
+      }, 900);
+    }
+
+    function setPreview(n) {
+      if (gameOver || computerThinking || turn !== 'you') return;
+      previewCount = n;
+      render();
+    }
+
+    function clearPreview() {
+      if (computerThinking) return;
+      previewCount = 0;
+      render();
+    }
+
+    function render() {
+      const banner = document.getElementById('turnBanner');
+      if (gameOver) {
+        const youWon = turn === 'you';
+        banner.className = `turn-banner ${youWon ? 'win' : 'lose'}`;
+        banner.innerText = youWon ? 'You win!' : 'Computer wins!';
+      } else if (computerThinking) {
+        banner.className = 'turn-banner';
+        banner.innerText = 'Computer to move...';
+      } else {
+        banner.className = 'turn-banner';
+        banner.innerText = turn === 'you' ? 'Your move' : 'Computer to move';
+      }
+
+      const track = document.getElementById('coinTrack');
+      track.innerHTML = '';
+      for (let i = 0; i < startSize; i++) {
+        const coin = document.createElement('div');
+        if (i >= coins) {
+          coin.className = 'coin gone';
+        } else {
+          const posFromRight = coins - i;
+          const isLast = posFromRight === 1;
+          const isSecondLast = posFromRight === 2;
+          const yourTurnActive = turn === 'you' && !gameOver && !computerThinking;
+          let cls = 'coin';
+          if ((isLast || isSecondLast) && yourTurnActive) cls += ' clickable';
+
+          const previewClass = computerThinking ? 'computer-preview' : 'preview';
+          if (previewCount >= 1 && isLast) cls += ' ' + previewClass;
+          if (previewCount === 2 && isSecondLast) cls += ' ' + previewClass;
+
+          coin.className = cls;
+          if (yourTurnActive) {
+            if (isLast) {
+              coin.onmouseenter = () => setPreview(1);
+              coin.onmouseleave = clearPreview;
+              coin.onclick = () => removeCoins(1);
+            } else if (isSecondLast) {
+              coin.onmouseenter = () => setPreview(2);
+              coin.onmouseleave = clearPreview;
+              coin.onclick = () => removeCoins(2);
+            }
+          }
+        }
+        track.appendChild(coin);
+      }
+    }
+
+    start(7);
+  </script>
+</body>
+</html>
