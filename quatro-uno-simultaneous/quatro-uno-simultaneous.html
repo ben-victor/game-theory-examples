@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simultaneous Quatro-Uno</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --value-1: #2563eb;
+      --value-2: #d97706;
+      --value-3: #dc2626;
+      --value-4: #16a34a;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .rules ul {
+      margin: 0.5rem 0 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 1.05rem;
+      min-height: 1.5em;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .selection-title, .pile-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .selection-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      width: 54px;
+      height: 80px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #fff;
+      user-select: none;
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    }
+
+    .card.v1 { background-color: var(--value-1); }
+    .card.v2 { background-color: var(--value-2); }
+    .card.v3 { background-color: var(--value-3); }
+    .card.v4 { background-color: var(--value-4); }
+
+    .card.clickable {
+      cursor: pointer;
+    }
+
+    .card.clickable:hover {
+      transform: translateY(-4px);
+    }
+
+    .card.back {
+      background: repeating-linear-gradient(45deg, #334155, #334155 6px, #3f4f68 6px, #3f4f68 12px);
+      border: 2px solid #64748b;
+      color: #94a3b8;
+      font-size: 1.4rem;
+    }
+
+    .card.empty-slot {
+      background: transparent;
+      border: 2px dashed #334155;
+      color: #475569;
+      font-size: 1rem;
+    }
+
+    .card.discarded {
+      opacity: 0.25;
+      transform: scale(0.9);
+    }
+
+    .card.active {
+      box-shadow: 0 0 0 3px var(--highlight);
+    }
+
+    .piles-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .pile-block {
+      margin-bottom: 1.2rem;
+    }
+
+    .pile-row {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .duel-arena {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.2rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+      min-height: 100px;
+    }
+
+    .duel-vs {
+      font-size: 1.3rem;
+      color: #64748b;
+      font-weight: bold;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+
+    .reset-btn:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 420px) {
+      .card { width: 42px; height: 62px; font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>Simultaneous Quatro-Uno</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> You and the computer each have the cards 1, 2, 3, 4. Secretly and
+      simultaneously, you both arrange your four cards into a pile, front to back — this is a single
+      blind decision, not something you can react to.
+      <ul>
+        <li>Each round, both piles reveal their <strong>front</strong> card.</li>
+        <li>The <strong>higher</strong> card wins and stays at the front to guard again next round; the lower one is discarded.</li>
+        <li><strong>Equal cards</strong> are both discarded.</li>
+        <li><strong>Special rule:</strong> a 1 facing a 4 also discards both, even though 4 is higher.</li>
+      </ul>
+      Whoever's pile empties first <strong>loses</strong>. The computer isn't reacting to you — it
+      commits to one of four fixed orderings drawn from its game-theoretically optimal mixed strategy
+      (20% / 40% / 20% / 20%), the same equilibrium this game's textbook chapter works out by hand.
+    </div>
+
+    <div class="scoreboard">
+      <div>You: <span id="playerScore">0</span></div>
+      <div>Computer: <span id="computerScore">0</span></div>
+      <div>Draws: <span id="drawScore">0</span></div>
+    </div>
+
+    <div class="status-msg" id="statusMsg">Choose your card order — click cards left to right.</div>
+
+    <div id="selectionArea">
+      <div class="selection-title">Click to add to your pile (front → back)</div>
+      <div class="selection-row" id="selectionRow"></div>
+    </div>
+
+    <div class="duel-arena" id="duelArena" style="display:none;">
+      <div class="card back" id="duelPlayerCard">?</div>
+      <div class="duel-vs">VS</div>
+      <div class="card back" id="duelComputerCard">?</div>
+    </div>
+
+    <div class="piles-section" id="pilesSection" style="display:none;">
+      <div class="pile-block">
+        <div class="pile-title">Your Pile (front → back)</div>
+        <div class="pile-row" id="playerPileRow"></div>
+      </div>
+      <div class="pile-block">
+        <div class="pile-title">Computer's Pile (front → back)</div>
+        <div class="pile-row" id="computerPileRow"></div>
+      </div>
+    </div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <button class="reset-btn" id="newGameBtn" onclick="newGame()">New Game</button>
+
+    <footer>
+      Based on <strong>Simultaneous Quatro-Uno</strong>, a game theory exercise created by
+      <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    let available = [];
+    let playerOrder = [];
+    let computerOrder = [];
+    let playerFront = 0;
+    let computerFront = 0;
+    let computerRevealed = [];
+    let phase = 'selecting'; // 'selecting' | 'battling' | 'done'
+    let scores = { player: 0, computer: 0, draw: 0 };
+
+    function pickComputerOrder() {
+      const r = Math.random();
+      if (r < 0.2) return [1, 2, 4, 3];
+      if (r < 0.6) return [3, 2, 1, 4];
+      if (r < 0.8) return [4, 1, 3, 2];
+      return [4, 3, 2, 1];
+    }
+
+    function newGame() {
+      available = [1, 2, 3, 4];
+      playerOrder = [];
+      computerOrder = pickComputerOrder();
+      playerFront = 0;
+      computerFront = 0;
+      computerRevealed = [false, false, false, false];
+      phase = 'selecting';
+      document.getElementById('historyLog').innerHTML = '';
+      document.getElementById('duelArena').style.display = 'none';
+      document.getElementById('pilesSection').style.display = 'none';
+      document.getElementById('selectionArea').style.display = '';
+      document.getElementById('statusMsg').innerText = 'Choose your card order — click cards left to right.';
+      render();
+    }
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function selectCard(v) {
+      if (phase !== 'selecting') return;
+      if (!available.includes(v)) return;
+      available = available.filter(x => x !== v);
+      playerOrder.push(v);
+      render();
+      if (playerOrder.length === 4) {
+        phase = 'battling';
+        document.getElementById('selectionArea').style.display = 'none';
+        document.getElementById('duelArena').style.display = 'flex';
+        document.getElementById('pilesSection').style.display = '';
+        document.getElementById('newGameBtn').disabled = true;
+        logMove(`You committed to the order ${playerOrder.join('')}.`);
+        render();
+        setTimeout(playRound, 700);
+      }
+    }
+
+    function playRound() {
+      if (playerFront === 4 || computerFront === 4) { endGame(); return; }
+      computerRevealed[computerFront] = true;
+      document.getElementById('statusMsg').innerText = 'Revealing front cards...';
+      render();
+      setTimeout(resolveRound, 700);
+    }
+
+    function resolveRound() {
+      const p = playerOrder[playerFront];
+      const c = computerOrder[computerFront];
+      let resultText;
+
+      if (p === c) {
+        resultText = `Both show ${p} — tie, both cards are discarded.`;
+        playerFront++;
+        computerFront++;
+      } else if (Math.abs(p - c) === 3) {
+        resultText = `${p} faces ${c} — the special 1-vs-4 rule discards both.`;
+        playerFront++;
+        computerFront++;
+      } else if (p > c) {
+        resultText = `Your ${p} beats the computer's ${c} — your card stays on guard.`;
+        computerFront++;
+      } else {
+        resultText = `Computer's ${c} beats your ${p} — it stays on guard.`;
+        playerFront++;
+      }
+
+      document.getElementById('statusMsg').innerText = resultText;
+      logMove(resultText);
+      render();
+
+      setTimeout(() => {
+        if (playerFront === 4 || computerFront === 4) {
+          endGame();
+        } else {
+          playRound();
+        }
+      }, 700);
+    }
+
+    function endGame() {
+      phase = 'done';
+      document.getElementById('newGameBtn').disabled = false;
+      document.getElementById('duelArena').style.display = 'none';
+
+      if (playerFront === 4 && computerFront === 4) {
+        scores.draw++;
+        document.getElementById('statusMsg').innerText = "It's a draw! Both piles emptied at once.";
+        logMove('Result: Draw!', true);
+      } else if (playerFront === 4) {
+        scores.computer++;
+        document.getElementById('statusMsg').innerText = 'Computer wins! Your pile ran out first.';
+        logMove('Result: Computer wins!', true);
+      } else {
+        scores.player++;
+        document.getElementById('statusMsg').innerText = "You win! The computer's pile ran out first.";
+        logMove('Result: You win!', true);
+      }
+      render();
+    }
+
+    function render() {
+      document.getElementById('playerScore').innerText = scores.player;
+      document.getElementById('computerScore').innerText = scores.computer;
+      document.getElementById('drawScore').innerText = scores.draw;
+
+      // Selection row: available cards to build your pile
+      const selRow = document.getElementById('selectionRow');
+      selRow.innerHTML = '';
+      [1, 2, 3, 4].forEach(v => {
+        const el = document.createElement('div');
+        const has = available.includes(v);
+        el.className = `card v${v} ${has ? 'clickable' : 'discarded'}`;
+        el.innerText = v;
+        if (has) el.onclick = () => selectCard(v);
+        selRow.appendChild(el);
+      });
+
+      // Duel arena: current front cards
+      if (phase === 'battling') {
+        const pCard = document.getElementById('duelPlayerCard');
+        const cCard = document.getElementById('duelComputerCard');
+        const pv = playerOrder[playerFront];
+        const cv = computerOrder[computerFront];
+        pCard.className = `card v${pv} active`;
+        pCard.innerText = pv;
+        if (computerRevealed[computerFront]) {
+          cCard.className = `card v${cv} active`;
+          cCard.innerText = cv;
+        } else {
+          cCard.className = 'card back';
+          cCard.innerText = '?';
+        }
+      }
+
+      // Pile rows: fixed 4 slots each, showing discarded / active / upcoming
+      const playerRow = document.getElementById('playerPileRow');
+      playerRow.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const el = document.createElement('div');
+        const v = playerOrder[i];
+        if (v === undefined) {
+          el.className = 'card empty-slot';
+          el.innerText = '';
+        } else if (i < playerFront) {
+          el.className = `card v${v} discarded`;
+          el.innerText = v;
+        } else if (i === playerFront) {
+          el.className = `card v${v} active`;
+          el.innerText = v;
+        } else {
+          el.className = `card v${v}`;
+          el.innerText = v;
+        }
+        playerRow.appendChild(el);
+      }
+
+      const computerRow = document.getElementById('computerPileRow');
+      computerRow.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const v = computerOrder[i];
+        const el = document.createElement('div');
+        const isRevealed = computerRevealed[i];
+        if (i < computerFront) {
+          el.className = `card v${v} discarded`;
+          el.innerText = v;
+        } else if (i === computerFront && isRevealed) {
+          el.className = `card v${v} active`;
+          el.innerText = v;
+        } else {
+          el.className = 'card back';
+          el.innerText = '?';
+        }
+        computerRow.appendChild(el);
+      }
+    }
+
+    newGame();
+  </script>
+</body>
+</html>

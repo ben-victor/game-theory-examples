@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rec the Square</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --white-solid: #f1f5f9;
+      --white-tentative: #64748b;
+      --black-solid: #0f172a;
+      --black-tentative: #334155;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .rules h4 {
+      margin: 0.9rem 0 0.3rem 0;
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+
+    .rules h4:first-child {
+      margin-top: 0;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .turn-banner {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      min-height: 1.6em;
+      margin-bottom: 1.5rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .turn-banner.win {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .board-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 90px);
+      grid-template-rows: repeat(3, 90px);
+      gap: 6px;
+      background: #0f172a;
+      padding: 6px;
+      border-radius: 12px;
+      border: 2px solid #334155;
+    }
+
+    .cell {
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid #334155;
+    }
+
+    .cell.empty:hover {
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .cell.not-clickable {
+      cursor: default;
+    }
+
+    .cell.white-solid { background: var(--white-solid); }
+    .cell.white-tentative { background: var(--white-tentative); box-shadow: 0 0 0 3px var(--highlight); }
+    .cell.black-solid { background: var(--black-solid); border-color: #000; }
+    .cell.black-tentative { background: var(--black-tentative); box-shadow: 0 0 0 3px var(--highlight); }
+
+    .cell.corner-marker::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(148, 163, 184, 0.35);
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+
+    .legend-swatch {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin-right: 0.35rem;
+      vertical-align: middle;
+    }
+
+    .payoff-box {
+      background: rgba(250, 204, 21, 0.08);
+      border: 1px solid var(--highlight);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .payoff-box.show {
+      display: block;
+    }
+
+    .payoff-box strong {
+      color: var(--highlight);
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 420px) {
+      .board { grid-template-columns: repeat(3, 70px); grid-template-rows: repeat(3, 70px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../" class="back-link">&larr; Back to Games</a>
+    <h1>3 &times; 3 Rec the Square</h1>
+
+    <div class="rules">
+      <h4>Rec the Square</h4>
+      White and Black alternately place dominoes (two orthogonally adjacent squares) onto the 3&times;3
+      board — either player can place a domino in any orientation. Click an empty square to tentatively
+      start a domino there; click it again to cancel; or click an empty square <strong>adjacent</strong>
+      to it to complete and confirm the domino. Whoever <strong>cannot fit a new domino</strong> in loses
+      — the other player wins.
+
+      <h4>Creating Holes</h4>
+      A different game uses the exact same moves, but scores it differently: play continues (each player
+      who can move must move) until someone can't move at all. Then <strong>White earns $1 for every
+      empty corner square</strong> left over, and <strong>Black earns $1 for every other empty
+      square</strong> (edges and the center). Nobody "wins" outright — it's about maximizing your own
+      payoff. Every game you play here is scored both ways at the end, so you can compare the two.
+    </div>
+
+    <div class="scoreboard">
+      <div>White wins: <span id="whiteScore">0</span></div>
+      <div>Black wins: <span id="blackScore">0</span></div>
+    </div>
+
+    <div class="turn-banner" id="turnBanner">White to move</div>
+
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="legend">
+      <div><span class="legend-swatch" style="background: var(--white-solid);"></span>White</div>
+      <div><span class="legend-swatch" style="background: var(--black-solid);"></span>Black</div>
+      <div><span class="legend-swatch" style="background: var(--highlight);"></span>Pending</div>
+    </div>
+
+    <div class="payoff-box" id="payoffBox"></div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <button class="reset-btn" onclick="newGame()">New Game</button>
+
+    <footer>
+      Based on <strong>Rec the Square</strong> and its <strong>Creating Holes</strong> scoring variant,
+      game theory exercises created by <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    const SIZE = 3;
+    let grid = [];        // 0 empty, 1 white, 2 black (confirmed)
+    let pending = null;   // {i, j} anchor cell of an in-progress domino, or null
+    let flashPair = null; // {a:{i,j}, b:{i,j}} during the brief confirm flourish
+    let turn = 'white';
+    let gameOver = false;
+    let scores = { white: 0, black: 0 };
+
+    function newGame() {
+      grid = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+      pending = null;
+      flashPair = null;
+      turn = 'white';
+      gameOver = false;
+      document.getElementById('historyLog').innerHTML = '';
+      document.getElementById('payoffBox').classList.remove('show');
+      logMove('New game. White to move.');
+      render();
+    }
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function cap(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function isAdjacent(a, b) {
+      return (a.i === b.i && Math.abs(a.j - b.j) === 1) ||
+             (a.j === b.j && Math.abs(a.i - b.i) === 1);
+    }
+
+    function hasAnyMove() {
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          if (grid[i][j] !== 0) continue;
+          if (j + 1 < SIZE && grid[i][j + 1] === 0) return true;
+          if (i + 1 < SIZE && grid[i + 1][j] === 0) return true;
+        }
+      }
+      return false;
+    }
+
+    function isCorner(i, j) {
+      return (i === 0 || i === SIZE - 1) && (j === 0 || j === SIZE - 1);
+    }
+
+    function cellClick(i, j) {
+      if (gameOver || flashPair) return;
+
+      if (grid[i][j] !== 0) {
+        // Only a click on the pending anchor cell cancels it
+        if (pending && pending.i === i && pending.j === j) {
+          grid[i][j] = 0;
+          pending = null;
+          render();
+        }
+        return;
+      }
+
+      const value = turn === 'white' ? 1 : 2;
+
+      if (!pending) {
+        grid[i][j] = value;
+        pending = { i, j };
+        render();
+        return;
+      }
+
+      if (!isAdjacent(pending, { i, j })) {
+        return; // must be adjacent to the pending cell
+      }
+
+      grid[i][j] = value;
+      const anchor = pending;
+      const mover = turn;
+      pending = null;
+      flashPair = { a: anchor, b: { i, j } };
+      render();
+
+      setTimeout(() => {
+        flashPair = null;
+        logMove(`${cap(mover)} places a domino at (${anchor.i + 1},${anchor.j + 1})-(${i + 1},${j + 1}).`);
+        turn = mover === 'white' ? 'black' : 'white';
+        if (!hasAnyMove()) {
+          endGame(mover);
+        }
+        render();
+      }, 500);
+    }
+
+    function endGame(winner) {
+      gameOver = true;
+      scores[winner]++;
+      document.getElementById(winner === 'white' ? 'whiteScore' : 'blackScore').innerText = scores[winner];
+      logMove(`${cap(winner)} wins — the other player has no room for a domino!`, true);
+
+      let corners = 0, others = 0;
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          if (grid[i][j] === 0) {
+            if (isCorner(i, j)) corners++; else others++;
+          }
+        }
+      }
+      const box = document.getElementById('payoffBox');
+      box.classList.add('show');
+      box.innerHTML = `<strong>Creating Holes scoring:</strong> ${corners} empty corner square${corners !== 1 ? 's' : ''} → White earns $${corners}. ${others} other empty square${others !== 1 ? 's' : ''} → Black earns $${others}.`;
+    }
+
+    function render() {
+      const banner = document.getElementById('turnBanner');
+      if (gameOver) {
+        banner.className = 'turn-banner win';
+        banner.innerText = `${cap(turn === 'white' ? 'black' : 'white')} wins!`;
+      } else if (pending) {
+        banner.className = 'turn-banner';
+        banner.innerText = `${cap(turn)}: click an adjacent empty square to confirm, or click your pending square again to cancel.`;
+      } else {
+        banner.className = 'turn-banner';
+        banner.innerText = `${cap(turn)} to move`;
+      }
+
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          const cell = document.createElement('div');
+          const v = grid[i][j];
+          const isFlashing = flashPair && (
+            (flashPair.a.i === i && flashPair.a.j === j) ||
+            (flashPair.b.i === i && flashPair.b.j === j)
+          );
+          const isPendingCell = pending && pending.i === i && pending.j === j;
+
+          let cls = 'cell';
+          if (v === 0) {
+            cls += gameOver ? ' not-clickable' : ' empty';
+          } else if (v === 1) {
+            cls += (isPendingCell || isFlashing) ? ' white-tentative' : ' white-solid';
+          } else if (v === 2) {
+            cls += (isPendingCell || isFlashing) ? ' black-tentative' : ' black-solid';
+          }
+          cell.className = cls;
+          if (v === 0 && !gameOver) {
+            cell.onclick = () => cellClick(i, j);
+          } else if (isPendingCell) {
+            cell.onclick = () => cellClick(i, j);
+          }
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    newGame();
+  </script>
+</body>
+</html>
