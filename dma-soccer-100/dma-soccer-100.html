@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>100 Rounds in DMA Soccer</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --blue-color: #2563eb;
+      --red-color: #dc2626;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 760px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .rules ul {
+      margin: 0.5rem 0 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .agg-board {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      gap: 0.5rem;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .agg-board .stat strong {
+      display: block;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+
+    .banner {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      min-height: 1.6em;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.08);
+      color: var(--accent);
+    }
+
+    .banner.blue-goal { background: rgba(37, 99, 235, 0.2); color: #93c5fd; }
+    .banner.red-goal { background: rgba(220, 38, 38, 0.2); color: #fca5a5; }
+    .banner.over { background: rgba(250, 204, 21, 0.15); color: var(--highlight); }
+
+    .scoreline {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+    }
+
+    .scoreline .blue { color: var(--blue-color); }
+    .scoreline .red { color: var(--red-color); }
+
+    .round-counter {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 1rem 0.5rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .field-slot {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      position: relative;
+      min-height: 70px;
+    }
+
+    .field-slot.goal {
+      flex: 0 0 60px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .field-slot.goal.blue-goal-slot { color: var(--blue-color); }
+    .field-slot.goal.red-goal-slot { color: var(--red-color); }
+
+    .field-divider {
+      width: 1px;
+      align-self: stretch;
+      background: #334155;
+    }
+
+    .zone-count {
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-radius: 5px;
+      padding: 0.1rem 0.4rem;
+    }
+
+    .zone-count.blue { color: #93c5fd; background: rgba(37, 99, 235, 0.15); }
+    .zone-count.red { color: #fca5a5; background: rgba(220, 38, 38, 0.15); }
+
+    .ball {
+      position: absolute;
+      top: -14px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff, #cbd5e1 70%);
+      border: 2px solid #64748b;
+      transition: left 0.35s ease;
+      left: 0;
+    }
+
+    .formations {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .formation-panel {
+      flex: 1;
+      border-radius: 10px;
+      padding: 0.9rem;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .formation-panel.blue { box-shadow: inset 4px 0 0 var(--blue-color); }
+    .formation-panel.red { box-shadow: inset 4px 0 0 var(--red-color); }
+
+    .formation-panel h3 {
+      margin: 0 0 0.6rem 0;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    .formation-panel.blue h3 { color: var(--blue-color); }
+    .formation-panel.red h3 { color: var(--red-color); }
+
+    .zone-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .zone-row .zone-label {
+      flex: 1;
+      color: #cbd5e1;
+    }
+
+    .zone-row .zone-value {
+      font-weight: bold;
+      width: 20px;
+      text-align: center;
+    }
+
+    .zone-row button {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: var(--disabled-card);
+      color: #f8fafc;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .zone-row button:hover:not(:disabled) {
+      opacity: 0.85;
+    }
+
+    .zone-row button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .setup-note {
+      text-align: center;
+      font-size: 0.78rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .controls button {
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      padding: 0.6rem 1.1rem;
+      cursor: pointer;
+    }
+
+    .controls button.secondary {
+      background: var(--disabled-card);
+      color: #f8fafc;
+    }
+
+    .controls button:hover {
+      opacity: 0.9;
+    }
+
+    .controls label {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .controls input[type="number"] {
+      width: 70px;
+      padding: 0.4rem;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      max-height: 170px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 500px) {
+      .formations { flex-direction: column; }
+      .field-slot.goal { flex-basis: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>100 Rounds in DMA Soccer</h1>
+
+    <div class="rules">
+      <strong>DMA Soccer:</strong> The field has three zones: Left, Midfield, and Right. Two teams,
+      Blue and Red, each send 5 players onto the field, split across Defense / Midfield / Attack — and
+      each player stays in their zone the whole match. The ball starts at midfield after kickoff and
+      after every goal.
+      <ul>
+        <li>If a <strong>Blue midfielder</strong> gets the ball, they throw it into the right zone. A
+          <strong>Blue attacker</strong> there scores a goal; a <strong>Red defender</strong> there
+          throws it back to midfield instead.</li>
+        <li>Symmetrically, a <strong>Red midfielder</strong> throws left: a <strong>Red attacker</strong>
+          scores, a <strong>Blue defender</strong> sends it back to midfield.</li>
+        <li>The ball is never thrown directly between the left and right zones.</li>
+      </ul>
+      Before starting, arrange each team's formation with the arrows below (always 5 players, shuffled
+      between adjacent zones). Once you hit Play, formations lock for the rest of that match — this
+      simulator runs the requested number of rounds and tallies results, then lets you tweak formations
+      and run it again.
+    </div>
+
+    <div class="agg-board" id="aggBoard"></div>
+
+    <div class="banner" id="banner">Set formations, then press Play.</div>
+    <div class="scoreline" id="scoreline"><span class="blue">0</span> : <span class="red">0</span></div>
+    <div class="round-counter" id="roundCounter"></div>
+
+    <div class="field" id="field">
+      <div class="field-slot goal red-goal-slot">RED<br>GOAL</div>
+      <div class="field-divider"></div>
+      <div class="field-slot" id="slot1">
+        <span class="zone-count blue" id="zoneDL"></span>
+        <span class="zone-count red" id="zoneAR"></span>
+      </div>
+      <div class="field-divider"></div>
+      <div class="field-slot" id="slot2">
+        <span class="zone-count blue" id="zoneML"></span>
+        <span class="zone-count red" id="zoneMR"></span>
+      </div>
+      <div class="field-divider"></div>
+      <div class="field-slot" id="slot3">
+        <span class="zone-count blue" id="zoneAL"></span>
+        <span class="zone-count red" id="zoneDR"></span>
+      </div>
+      <div class="field-divider"></div>
+      <div class="field-slot goal blue-goal-slot">BLUE<br>GOAL</div>
+      <div class="ball" id="ball"></div>
+    </div>
+
+    <div class="formations">
+      <div class="formation-panel blue">
+        <h3>Blue Formation</h3>
+        <div class="zone-row">
+          <button id="blueDMinus" onclick="shiftBlue('D','M')">&larr;</button>
+          <span class="zone-label">Defense</span>
+          <span class="zone-value" id="blueD"></span>
+          <button id="blueDPlus" onclick="shiftBlue('M','D')">&rarr;</button>
+        </div>
+        <div class="zone-row">
+          <button id="blueMMinus" onclick="shiftBlue('M','D')" style="visibility:hidden;"></button>
+          <span class="zone-label">Midfield</span>
+          <span class="zone-value" id="blueM"></span>
+          <span style="width:28px;"></span>
+        </div>
+        <div class="zone-row">
+          <button id="blueAMinus" onclick="shiftBlue('A','M')">&larr;</button>
+          <span class="zone-label">Attack</span>
+          <span class="zone-value" id="blueA"></span>
+          <button id="blueAPlus" onclick="shiftBlue('M','A')">&rarr;</button>
+        </div>
+      </div>
+      <div class="formation-panel red">
+        <h3>Red Formation</h3>
+        <div class="zone-row">
+          <button id="redAMinus" onclick="shiftRed('A','M')">&larr;</button>
+          <span class="zone-label">Attack</span>
+          <span class="zone-value" id="redA"></span>
+          <button id="redAPlus" onclick="shiftRed('M','A')">&rarr;</button>
+        </div>
+        <div class="zone-row">
+          <span style="width:28px;"></span>
+          <span class="zone-label">Midfield</span>
+          <span class="zone-value" id="redM"></span>
+          <span style="width:28px;"></span>
+        </div>
+        <div class="zone-row">
+          <button id="redDMinus" onclick="shiftRed('D','M')">&larr;</button>
+          <span class="zone-label">Defense</span>
+          <span class="zone-value" id="redD"></span>
+          <button id="redDPlus" onclick="shiftRed('M','D')">&rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-note" id="setupNote">Formations can be changed until you press Play.</div>
+
+    <div class="controls" id="setupControls">
+      <label>Rounds: <input type="number" id="roundsInput" value="100" min="1" max="500"></label>
+      <button onclick="startPlay('auto')">Automatic Play</button>
+      <button class="secondary" onclick="startPlay('step')">Step-by-Step</button>
+    </div>
+
+    <div class="controls" id="stepControls" style="display:none;">
+      <button onclick="doStep()">Next Step</button>
+    </div>
+
+    <div class="controls" id="speedControls" style="display:none;">
+      <button class="secondary" onclick="faster()">Faster</button>
+      <button class="secondary" onclick="slower()">Slower</button>
+    </div>
+
+    <div class="controls" id="newGameControls" style="display:none;">
+      <button onclick="setupNextMatch()">New Game</button>
+    </div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <footer>
+      Based on <strong>DMA Soccer</strong>, a game theory exercise created by <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    let blue = { D: 1, M: 1, A: 3 };
+    let red = { D: 2, M: 2, A: 1 };
+    let ballPos = 2;
+    let scoreBlue = 0, scoreRed = 0;
+    let tick = 0, totalTicks = 200;
+    let matchState = 'setup'; // 'setup' | 'playing' | 'finished'
+    let deltaT = 1000;
+    let probs = { p1: 0.5, p2: 0.5, p3: 0.5 };
+    let gamesPlayed = 0;
+    let agg = { blueWins: 0, draws: 0, redWins: 0, blueGoals: 0, redGoals: 0 };
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function shiftBlue(from, to) {
+      if (matchState !== 'setup') return;
+      if (blue[from] <= 0) return;
+      blue[from]--;
+      blue[to]++;
+      render();
+    }
+
+    function shiftRed(from, to) {
+      if (matchState !== 'setup') return;
+      if (red[from] <= 0) return;
+      red[from]--;
+      red[to]++;
+      render();
+    }
+
+    function startPlay(mode) {
+      if (matchState !== 'setup') return;
+      const roundsInput = parseInt(document.getElementById('roundsInput').value, 10);
+      const rounds = (isNaN(roundsInput) || roundsInput < 1) ? 100 : roundsInput;
+      document.getElementById('roundsInput').value = rounds;
+      totalTicks = 2 * rounds;
+      tick = 0;
+      ballPos = 2;
+      scoreBlue = 0;
+      scoreRed = 0;
+      matchState = 'playing';
+
+      probs.p1 = (blue.D + red.A > 0) ? blue.D / (blue.D + red.A) : 0.5;
+      probs.p2 = (blue.M + red.M > 0) ? blue.M / (blue.M + red.M) : 0.5;
+      probs.p3 = (blue.A + red.D > 0) ? blue.A / (blue.A + red.D) : 0.5;
+
+      document.getElementById('setupControls').style.display = 'none';
+      document.getElementById('setupNote').style.display = 'none';
+
+      logMove(`Match ${gamesPlayed + 1}: kickoff. Blue plays (D${blue.D} M${blue.M} A${blue.A}), Red plays (D${red.D} M${red.M} A${red.A}). ${rounds} rounds planned.`);
+
+      if (mode === 'auto') {
+        document.getElementById('speedControls').style.display = '';
+        autoLoop();
+      } else {
+        document.getElementById('stepControls').style.display = '';
+        render();
+      }
+    }
+
+    function doStep() {
+      if (matchState !== 'playing') return;
+      performTick();
+      render();
+      if (matchState === 'finished') {
+        document.getElementById('stepControls').style.display = 'none';
+      }
+    }
+
+    function autoLoop() {
+      if (matchState !== 'playing') return;
+      performTick();
+      render();
+      if (matchState === 'finished') {
+        document.getElementById('speedControls').style.display = 'none';
+        return;
+      }
+      setTimeout(autoLoop, deltaT);
+    }
+
+    function performTick() {
+      if (matchState !== 'playing') return;
+      tick++;
+
+      const r = Math.random();
+      if (ballPos === 1) {
+        ballPos = (r < probs.p1) ? 2 : 0;
+      } else if (ballPos === 2) {
+        ballPos = (r < probs.p2) ? 3 : 1;
+      } else if (ballPos === 3) {
+        ballPos = (r < probs.p3) ? 4 : 2;
+      }
+
+      if (ballPos === 0) {
+        scoreRed++;
+        showBanner('red-goal', 'Goal for Red!');
+        ballPos = 2;
+      } else if (ballPos === 4) {
+        scoreBlue++;
+        showBanner('blue-goal', 'Goal for Blue!');
+        ballPos = 2;
+      } else {
+        showBanner('', `Round ${(tick / 2).toFixed(1)}`);
+      }
+
+      if (tick >= totalTicks) {
+        finishMatch();
+      }
+    }
+
+    function finishMatch() {
+      matchState = 'finished';
+      gamesPlayed++;
+      agg.blueGoals += scoreBlue;
+      agg.redGoals += scoreRed;
+      let resultText;
+      if (scoreBlue > scoreRed) { agg.blueWins++; resultText = 'Blue wins'; }
+      else if (scoreRed > scoreBlue) { agg.redWins++; resultText = 'Red wins'; }
+      else { agg.draws++; resultText = 'Draw'; }
+
+      showBanner('over', 'Game over!');
+      logMove(`Match ${gamesPlayed}: ${resultText}, ${scoreBlue} : ${scoreRed}. Blue played (D${blue.D} M${blue.M} A${blue.A}), Red played (D${red.D} M${red.M} A${red.A}).`, true);
+
+      document.getElementById('newGameControls').style.display = '';
+      updateAggBoard();
+    }
+
+    function setupNextMatch() {
+      matchState = 'setup';
+      document.getElementById('newGameControls').style.display = 'none';
+      document.getElementById('setupControls').style.display = '';
+      document.getElementById('setupNote').style.display = '';
+      showBanner('', 'Set formations, then press Play.');
+      document.getElementById('scoreline').innerHTML = '<span class="blue">0</span> : <span class="red">0</span>';
+      document.getElementById('roundCounter').innerText = '';
+      ballPos = 2;
+      render();
+    }
+
+    function faster() {
+      if (deltaT > 200) deltaT -= 200;
+    }
+
+    function slower() {
+      deltaT = (deltaT > 900) ? deltaT + 400 : deltaT + 200;
+    }
+
+    function showBanner(cls, text) {
+      const b = document.getElementById('banner');
+      b.className = `banner ${cls}`;
+      b.innerText = text;
+    }
+
+    function updateAggBoard() {
+      const box = document.getElementById('aggBoard');
+      box.innerHTML = `
+        <div class="stat"><strong>${gamesPlayed}</strong>Games</div>
+        <div class="stat"><strong>${agg.blueWins}</strong>Blue Wins</div>
+        <div class="stat"><strong>${agg.draws}</strong>Draws</div>
+        <div class="stat"><strong>${agg.redWins}</strong>Red Wins</div>
+        <div class="stat"><strong>${agg.blueGoals}</strong>Blue Goals</div>
+        <div class="stat"><strong>${agg.redGoals}</strong>Red Goals</div>
+      `;
+    }
+
+    function render() {
+      document.getElementById('blueD').innerText = blue.D;
+      document.getElementById('blueM').innerText = blue.M;
+      document.getElementById('blueA').innerText = blue.A;
+      document.getElementById('redD').innerText = red.D;
+      document.getElementById('redM').innerText = red.M;
+      document.getElementById('redA').innerText = red.A;
+
+      const setupMode = matchState === 'setup';
+      document.getElementById('blueDMinus').disabled = !setupMode || blue.D <= 0;
+      document.getElementById('blueDPlus').disabled = !setupMode || blue.M <= 0;
+      document.getElementById('blueAMinus').disabled = !setupMode || blue.A <= 0;
+      document.getElementById('blueAPlus').disabled = !setupMode || blue.M <= 0;
+      document.getElementById('redAMinus').disabled = !setupMode || red.A <= 0;
+      document.getElementById('redAPlus').disabled = !setupMode || red.M <= 0;
+      document.getElementById('redDMinus').disabled = !setupMode || red.D <= 0;
+      document.getElementById('redDPlus').disabled = !setupMode || red.M <= 0;
+
+      document.getElementById('zoneDL').innerText = 'Blue D: ' + blue.D;
+      document.getElementById('zoneAR').innerText = 'Red A: ' + red.A;
+      document.getElementById('zoneML').innerText = 'Blue M: ' + blue.M;
+      document.getElementById('zoneMR').innerText = 'Red M: ' + red.M;
+      document.getElementById('zoneAL').innerText = 'Blue A: ' + blue.A;
+      document.getElementById('zoneDR').innerText = 'Red D: ' + red.D;
+
+      document.getElementById('scoreline').innerHTML =
+        `<span class="blue">${scoreBlue}</span> : <span class="red">${scoreRed}</span>`;
+      document.getElementById('roundCounter').innerText =
+        matchState === 'setup' ? '' : `Round ${(tick / 2).toFixed(1)} of ${(totalTicks / 2).toFixed(0)}`;
+
+      // Position the ball marker over one of the 5 slots
+      const field = document.getElementById('field');
+      const slots = [
+        field.children[0], // red goal
+        document.getElementById('slot1'),
+        document.getElementById('slot2'),
+        document.getElementById('slot3'),
+        field.children[8]  // blue goal
+      ];
+      const target = slots[ballPos];
+      const ball = document.getElementById('ball');
+      const fieldRect = field.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const center = targetRect.left - fieldRect.left + targetRect.width / 2 - 11;
+      ball.style.left = center + 'px';
+    }
+
+    updateAggBoard();
+    render();
+  </script>
+</body>
+</html>

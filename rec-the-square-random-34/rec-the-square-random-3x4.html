@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Polyomino Rec-the-Square (Random, 3x4)</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --white-solid: #f1f5f9;
+      --white-tentative: #64748b;
+      --black-solid: #0f172a;
+      --black-tentative: #334155;
+      --red-solid: #dc2626;
+      --red-tentative: #f87171;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .rules a { color: var(--accent); }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .turn-banner {
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 700;
+      min-height: 1.6em;
+      margin-bottom: 1.5rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .turn-banner.win {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .turn-banner.nature {
+      background: rgba(220, 38, 38, 0.15);
+      color: #fca5a5;
+    }
+
+    .board-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 78px);
+      grid-template-rows: repeat(3, 78px);
+      gap: 6px;
+      background: #0f172a;
+      padding: 6px;
+      border-radius: 12px;
+      border: 2px solid #334155;
+    }
+
+    .cell {
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid #334155;
+    }
+
+    .cell.empty.valid:hover {
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .cell.not-clickable {
+      cursor: default;
+    }
+
+    .cell.white-solid { background: var(--white-solid); }
+    .cell.white-tentative { background: var(--white-tentative); box-shadow: 0 0 0 3px var(--highlight); }
+    .cell.black-solid { background: var(--black-solid); border-color: #000; }
+    .cell.black-tentative { background: var(--black-tentative); box-shadow: 0 0 0 3px var(--highlight); }
+    .cell.red-solid { background: var(--red-solid); }
+    .cell.red-tentative { background: var(--red-tentative); box-shadow: 0 0 0 3px var(--highlight); }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-swatch {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin-right: 0.35rem;
+      vertical-align: middle;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .history-entry.nature {
+      color: #fca5a5;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 420px) {
+      .board { grid-template-columns: repeat(4, 62px); grid-template-rows: repeat(3, 62px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>Polyomino Rec-the-Square<br>with Randomness (3&times;4)</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> The same domino-placing game as
+      <a href="../rec-the-square-random-3x3/rec-the-square-random-3x3.html">the 3&times;3 random version</a>,
+      just on a larger 3&times;4 board. White and Black alternately place dominoes (two adjacent squares,
+      any orientation), and whoever cannot fit a new domino in loses.
+      <br><br>
+      The <strong>polyomino rule</strong> still applies: every square placed — by either player, or by
+      chance — must stay <strong>connected</strong> to the shape already on the board (touching it
+      edge-to-edge). The very first move of the game is exempt, since there's nothing to connect to yet.
+      After each completed domino, a <strong>red square</strong> is thrown onto a random empty square
+      that still satisfies the polyomino rule — shrinking the board for both players without belonging
+      to either of them.
+      <br><br>
+      Click an empty, validly-connected square to tentatively start a domino there; click it again to
+      cancel; or click an adjacent empty square to complete and confirm it.
+    </div>
+
+    <div class="scoreboard">
+      <div>White wins: <span id="whiteScore">0</span></div>
+      <div>Black wins: <span id="blackScore">0</span></div>
+    </div>
+
+    <div class="turn-banner" id="turnBanner">White to move</div>
+
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="legend">
+      <div><span class="legend-swatch" style="background: var(--white-solid);"></span>White</div>
+      <div><span class="legend-swatch" style="background: var(--black-solid);"></span>Black</div>
+      <div><span class="legend-swatch" style="background: var(--red-solid);"></span>Random square</div>
+      <div><span class="legend-swatch" style="background: var(--highlight);"></span>Pending</div>
+    </div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <button class="reset-btn" onclick="newGame()">New Game</button>
+
+    <footer>
+      Based on <strong>Polyomino Rec-the-Square with Randomness (3&times;4)</strong>, a game theory
+      exercise created by <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    const ROWS = 3;
+    const COLS = 4;
+    let grid = [];        // 0 empty, 1 white, 2 black, 3 red (confirmed)
+    let pending = null;   // {i, j} anchor cell of an in-progress domino, or null
+    let flashPair = null; // {a:{i,j}, b:{i,j}} during the domino confirm flourish
+    let flashRed = null;  // {i,j} during the random-square flourish
+    let turn = 'white';
+    let gameOver = false;
+    let busy = false;     // true while a random-square throw is resolving
+    let scores = { white: 0, black: 0 };
+
+    function newGame() {
+      grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+      pending = null;
+      flashPair = null;
+      flashRed = null;
+      turn = 'white';
+      gameOver = false;
+      busy = false;
+      document.getElementById('historyLog').innerHTML = '';
+      logMove('New game. White to move.');
+      render();
+    }
+
+    function logMove(text, cls = '') {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${cls}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function cap(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function isAdjacent(a, b) {
+      return (a.i === b.i && Math.abs(a.j - b.j) === 1) ||
+             (a.j === b.j && Math.abs(a.i - b.i) === 1);
+    }
+
+    function boardIsEmpty() {
+      return grid.every(row => row.every(v => v === 0));
+    }
+
+    function isConnected(i, j) {
+      if (boardIsEmpty()) return true;
+      if (i > 0 && grid[i - 1][j] > 0) return true;
+      if (j > 0 && grid[i][j - 1] > 0) return true;
+      if (i < ROWS - 1 && grid[i + 1][j] > 0) return true;
+      if (j < COLS - 1 && grid[i][j + 1] > 0) return true;
+      return false;
+    }
+
+    function emptyConnectedCells() {
+      const cells = [];
+      for (let i = 0; i < ROWS; i++) {
+        for (let j = 0; j < COLS; j++) {
+          if (grid[i][j] === 0 && isConnected(i, j)) cells.push({ i, j });
+        }
+      }
+      return cells;
+    }
+
+    function hasAnyMove() {
+      // A move exists if some empty, validly-connected cell A has an empty neighbor B.
+      const anchors = emptyConnectedCells();
+      for (const a of anchors) {
+        const neighbors = [
+          { i: a.i - 1, j: a.j }, { i: a.i + 1, j: a.j },
+          { i: a.i, j: a.j - 1 }, { i: a.i, j: a.j + 1 }
+        ];
+        for (const n of neighbors) {
+          if (n.i >= 0 && n.i < ROWS && n.j >= 0 && n.j < COLS && grid[n.i][n.j] === 0) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function cellClick(i, j) {
+      if (gameOver || flashPair || busy) return;
+
+      if (grid[i][j] !== 0) {
+        if (pending && pending.i === i && pending.j === j) {
+          grid[i][j] = 0;
+          pending = null;
+          render();
+        }
+        return;
+      }
+
+      if (!isConnected(i, j)) return; // polyomino rule: must touch existing shape
+
+      const value = turn === 'white' ? 1 : 2;
+
+      if (!pending) {
+        grid[i][j] = value;
+        pending = { i, j };
+        render();
+        return;
+      }
+
+      if (!isAdjacent(pending, { i, j })) return;
+
+      grid[i][j] = value;
+      const anchor = pending;
+      const mover = turn;
+      pending = null;
+      flashPair = { a: anchor, b: { i, j } };
+      render();
+
+      setTimeout(() => {
+        flashPair = null;
+        logMove(`${cap(mover)} places a domino at (${anchor.i + 1},${anchor.j + 1})-(${i + 1},${j + 1}).`);
+        turn = mover === 'white' ? 'black' : 'white';
+        render();
+        throwRandomSquare();
+      }, 300);
+    }
+
+    function throwRandomSquare() {
+      const candidates = emptyConnectedCells();
+      if (candidates.length === 0) {
+        checkGameOver();
+        return;
+      }
+      busy = true;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      grid[pick.i][pick.j] = 3;
+      flashRed = { i: pick.i, j: pick.j };
+      showBanner('nature', 'A random square appears...');
+      render();
+
+      setTimeout(() => {
+        flashRed = null;
+        logMove(`A random square lands at (${pick.i + 1},${pick.j + 1}).`, 'nature');
+        busy = false;
+        render();
+        checkGameOver();
+      }, 300);
+    }
+
+    function checkGameOver() {
+      if (!hasAnyMove()) {
+        endGame(turn === 'white' ? 'black' : 'white');
+      } else {
+        render();
+      }
+    }
+
+    function endGame(winner) {
+      gameOver = true;
+      scores[winner]++;
+      document.getElementById(winner === 'white' ? 'whiteScore' : 'blackScore').innerText = scores[winner];
+      logMove(`${cap(winner)} wins — the other player has no room for a domino!`, 'end');
+      render();
+    }
+
+    function showBanner(cls, text) {
+      const b = document.getElementById('turnBanner');
+      b.className = `turn-banner ${cls}`;
+      b.innerText = text;
+    }
+
+    function render() {
+      if (!busy) {
+        if (gameOver) {
+          showBanner('win', `${cap(turn === 'white' ? 'black' : 'white')} wins!`);
+        } else if (pending) {
+          showBanner('', `${cap(turn)}: click an adjacent empty square to confirm, or click your pending square again to cancel.`);
+        } else {
+          showBanner('', `${cap(turn)} to move`);
+        }
+      }
+
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      for (let i = 0; i < ROWS; i++) {
+        for (let j = 0; j < COLS; j++) {
+          const cell = document.createElement('div');
+          const v = grid[i][j];
+          const isFlashingDomino = flashPair && (
+            (flashPair.a.i === i && flashPair.a.j === j) ||
+            (flashPair.b.i === i && flashPair.b.j === j)
+          );
+          const isFlashingRed = flashRed && flashRed.i === i && flashRed.j === j;
+          const isPendingCell = pending && pending.i === i && pending.j === j;
+
+          let cls = 'cell';
+          if (v === 0) {
+            const valid = !gameOver && !busy && isConnected(i, j);
+            cls += (valid ? ' empty valid' : ' empty not-clickable');
+          } else if (v === 1) {
+            cls += (isPendingCell || isFlashingDomino) ? ' white-tentative' : ' white-solid';
+          } else if (v === 2) {
+            cls += (isPendingCell || isFlashingDomino) ? ' black-tentative' : ' black-solid';
+          } else if (v === 3) {
+            cls += isFlashingRed ? ' red-tentative' : ' red-solid';
+          }
+          cell.className = cls;
+
+          if (v === 0 && !gameOver && !busy) {
+            cell.onclick = () => cellClick(i, j);
+          } else if (isPendingCell) {
+            cell.onclick = () => cellClick(i, j);
+          }
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    newGame();
+  </script>
+</body>
+</html>

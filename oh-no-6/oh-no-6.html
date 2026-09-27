@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oh-No 6</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 560px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .rules ul {
+      margin: 0.5rem 0 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .play-panel {
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .die {
+      width: 84px;
+      height: 84px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 12px;
+      box-sizing: border-box;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      transition: transform 0.15s;
+    }
+
+    .die.rolling {
+      transform: rotate(8deg) scale(1.05);
+    }
+
+    .pip {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #0f172a;
+      align-self: center;
+      justify-self: center;
+      opacity: 0;
+    }
+
+    .pip.on { opacity: 1; }
+
+    .die.lost-die {
+      background: linear-gradient(135deg, #fca5a5, #ef4444);
+    }
+
+    .play-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.7rem;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .stat-box {
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      text-align: center;
+    }
+
+    .stat-box .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-box .stat-value {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--highlight);
+    }
+
+    .message-box {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      min-height: 1.6em;
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+
+    .message-box.won { color: var(--success); }
+    .message-box.lost { color: var(--danger); }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
+      margin-bottom: 0.8rem;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-weight: bold;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+
+    .roll-btn { background: var(--success); color: #0f172a; }
+    .stop-btn { background: var(--highlight); color: #0f172a; }
+
+    .action-buttons button:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .new-game-btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      font-size: 0.95rem;
+      padding: 0.8rem;
+      cursor: pointer;
+    }
+
+    .new-game-btn:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .new-game-btn:hover:not(:disabled),
+    .action-buttons button:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .average-box {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin: 1rem 0 1.5rem 0;
+    }
+
+    .average-box strong {
+      color: var(--highlight);
+      font-size: 1rem;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      max-height: 170px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>Oh-No 6</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> Same game as Oh-No, with one twist: roll a die as many times as you like,
+      and after each roll that many dollars are added to your heap, which starts empty.
+      <ul>
+        <li>You may stop anytime and <strong>keep</strong> whatever's in the heap.</li>
+        <li>Roll a <strong>6</strong> and the entire heap is lost — instantly, no matter how big it was.</li>
+      </ul>
+    </div>
+
+    <div class="play-panel">
+      <div class="die" id="die">
+        <div class="pip" id="p1"></div><div class="pip" id="p2"></div><div class="pip" id="p3"></div>
+        <div class="pip" id="p4"></div><div class="pip" id="p5"></div><div class="pip" id="p6"></div>
+        <div class="pip" id="p7"></div><div class="pip" id="p8"></div><div class="pip" id="p9"></div>
+      </div>
+
+      <div class="play-stats">
+        <div class="stat-box">
+          <div class="stat-label">Last Roll</div>
+          <div class="stat-value" id="statRoll">&ndash;</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Heap So Far</div>
+          <div class="stat-value" id="statHeap">$0</div>
+        </div>
+      </div>
+
+      <div class="message-box" id="messageBox"></div>
+
+      <div class="action-buttons">
+        <button class="roll-btn" id="rollBtn" onclick="rollDie()">Roll the Die</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopGame()">Stop &amp; Keep Heap</button>
+      </div>
+    </div>
+
+    <button class="new-game-btn" id="newGameBtn" onclick="startGame()" disabled>New Play</button>
+
+    <div class="average-box" id="averageBox">Average win: <strong>$0.00</strong> over 0 plays</div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <footer>
+      Based on <strong>Oh-No 6</strong>, a game theory exercise created by <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    // Pip layouts for each face, indices into the 3x3 grid (p1..p9, 0-indexed 0..8)
+    const PIP_LAYOUTS = {
+      1: [4],
+      2: [0, 8],
+      3: [0, 4, 8],
+      4: [0, 2, 6, 8],
+      5: [0, 2, 4, 6, 8],
+      6: [0, 2, 3, 5, 6, 8]
+    };
+
+    let heap = 0;
+    let lastRoll = 0;
+    let gameActive = false;
+    let n = 1;
+    let average = 0;
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function showDie(value, lost) {
+      const die = document.getElementById('die');
+      die.classList.toggle('lost-die', !!lost);
+      const active = new Set(PIP_LAYOUTS[value] || []);
+      for (let i = 0; i < 9; i++) {
+        document.getElementById('p' + (i + 1)).classList.toggle('on', active.has(i));
+      }
+    }
+
+    function startGame() {
+      heap = 0;
+      lastRoll = 0;
+      gameActive = true;
+      document.getElementById('rollBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = false;
+      document.getElementById('newGameBtn').disabled = true;
+      document.getElementById('messageBox').className = 'message-box';
+      document.getElementById('messageBox').innerText = '';
+      document.getElementById('statRoll').innerText = '\u2013';
+      document.getElementById('die').classList.remove('lost-die');
+      for (let i = 1; i <= 9; i++) document.getElementById('p' + i).classList.remove('on');
+      render();
+    }
+
+    function rollDie() {
+      if (!gameActive) return;
+      const die = document.getElementById('die');
+      die.classList.add('rolling');
+      setTimeout(() => {
+        die.classList.remove('rolling');
+        const roll = Math.ceil(Math.random() * 6);
+        lastRoll = roll;
+        showDie(roll, roll === 6);
+        document.getElementById('statRoll').innerText = roll;
+
+        if (roll === 6) {
+          logMove(`Rolled a 6 — the heap of $${heap} is lost!`);
+          lost();
+        } else {
+          heap += roll;
+          logMove(`Rolled a ${roll}. Heap is now $${heap}.`);
+          render();
+        }
+      }, 300);
+    }
+
+    function lost() {
+      const lostAmount = heap;
+      heap = 0;
+      average = ((n - 1) * average) / n;
+      n++;
+      endGame(`You lost the $${lostAmount} heap!`, true, `you lost $${lostAmount}`);
+    }
+
+    function stopGame() {
+      if (!gameActive) return;
+      const won = heap;
+      average = ((n - 1) * average + heap) / n;
+      n++;
+      heap = 0;
+      logMove(`Stopped and kept $${won}.`);
+      endGame(`You won $${won}!`, false, `you won $${won}`);
+    }
+
+    function endGame(displayText, lostFlag, logText) {
+      gameActive = false;
+      document.getElementById('rollBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = true;
+      document.getElementById('newGameBtn').disabled = false;
+
+      const messageBox = document.getElementById('messageBox');
+      messageBox.className = 'message-box ' + (lostFlag ? 'lost' : 'won');
+      messageBox.innerText = displayText;
+
+      document.getElementById('averageBox').innerHTML =
+        `Average win: <strong>$${average.toFixed(2)}</strong> over ${n - 1} play${n - 1 !== 1 ? 's' : ''}`;
+
+      logMove(`Result: ${logText}. Running average: $${average.toFixed(2)} over ${n - 1} plays.`, true);
+      render();
+    }
+
+    function render() {
+      document.getElementById('statHeap').innerText = '$' + heap;
+    }
+
+    startGame();
+  </script>
+</body>
+</html>

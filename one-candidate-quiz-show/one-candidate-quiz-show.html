@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1-Candidate Quiz Show</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.6rem;
+    }
+
+    .params-panel {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+
+    .params-panel p {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin: 0 0 0.7rem 0;
+    }
+
+    .params-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      min-width: 480px;
+    }
+
+    .params-table th, .params-table td {
+      padding: 0.4rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid #334155;
+    }
+
+    .params-table th {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .params-table input {
+      width: 60px;
+      text-align: center;
+      padding: 0.35rem;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    .play-panel {
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .play-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.7rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-box {
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      text-align: center;
+    }
+
+    .stat-box .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-box .stat-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .stat-box.money .stat-value {
+      color: var(--highlight);
+    }
+
+    .message-box {
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 600;
+      min-height: 1.6em;
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+
+    .message-box.won { color: var(--success); }
+    .message-box.lost { color: var(--danger); }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-weight: bold;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+
+    .try-btn { background: var(--success); color: #0f172a; }
+    .stop-btn { background: var(--highlight); color: #0f172a; }
+
+    .action-buttons button:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .new-game-btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      font-size: 0.95rem;
+      padding: 0.8rem;
+      cursor: pointer;
+    }
+
+    .new-game-btn:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .new-game-btn:hover:not(:disabled),
+    .action-buttons button:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      max-height: 170px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 480px) {
+      .play-stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>1-Candidate Quiz Show</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> You play a quiz show with up to six questions. Answering a question
+      correctly puts a certain (increasing) amount of money on the board. After each round you may
+      either <strong>stop and keep</strong> everything accumulated so far, or <strong>hear the next
+      question</strong>. Once you've heard a question, there's no backing out — you must answer it, and
+      a wrong answer loses <strong>everything</strong> you've built up.
+      <br><br>
+      The worth of each question and your probability of getting it wrong are known to you from the
+      start — these are the "parameters" of the game, and you can edit them below to try different
+      versions.
+    </div>
+
+    <div class="params-panel">
+      <div class="section-title">Parameters of the Game</div>
+      <p>Change these to create different versions — they take effect the moment you reach that
+        question (even mid-game, for rounds you haven't reached yet).</p>
+      <table class="params-table">
+        <tr>
+          <th>Question</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>
+        </tr>
+        <tr>
+          <td>Worth</td>
+          <td><input id="W1" type="number" step="any" value="1"></td>
+          <td><input id="W2" type="number" step="any" value="1"></td>
+          <td><input id="W3" type="number" step="any" value="2"></td>
+          <td><input id="W4" type="number" step="any" value="4"></td>
+          <td><input id="W5" type="number" step="any" value="8"></td>
+          <td><input id="W6" type="number" step="any" value="16"></td>
+        </tr>
+        <tr>
+          <td>P(wrong)</td>
+          <td><input id="P1" type="number" step="any" value="0.25"></td>
+          <td><input id="P2" type="number" step="any" value="0.286"></td>
+          <td><input id="P3" type="number" step="any" value="0.333"></td>
+          <td><input id="P4" type="number" step="any" value="0.4"></td>
+          <td><input id="P5" type="number" step="any" value="0.5"></td>
+          <td><input id="P6" type="number" step="any" value="0.667"></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="play-panel">
+      <div class="play-stats">
+        <div class="stat-box">
+          <div class="stat-label">Question</div>
+          <div class="stat-value" id="statRound">1 of 6</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Worth</div>
+          <div class="stat-value" id="statWorth">$1</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Risk of Wrong Answer</div>
+          <div class="stat-value" id="statProb">25%</div>
+        </div>
+        <div class="stat-box money">
+          <div class="stat-label">Accumulated Money</div>
+          <div class="stat-value" id="statMoney">$0</div>
+        </div>
+      </div>
+
+      <div class="message-box" id="messageBox"></div>
+
+      <div class="action-buttons">
+        <button class="try-btn" id="tryBtn" onclick="tryAnswer()">Hear the Question &amp; Try an Answer</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopGame()">Take the Money and Run</button>
+      </div>
+    </div>
+
+    <button class="new-game-btn" id="newGameBtn" onclick="startGame()" disabled>New Game</button>
+
+    <div class="history-title" style="margin-top:1.5rem;">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <footer>
+      Based on the <strong>1-Candidate Quiz Show</strong>, a game theory exercise created by
+      <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    let round = 1;      // 1-6 active questions, 7 = stopped, 8 = lost
+    let money = 0;
+    let currentPrize = 0;
+    let currentProb = 0;
+    let gameActive = false;
+
+    function getParam(prefix, idx) {
+      const el = document.getElementById(prefix + idx);
+      const val = parseFloat(el.value);
+      return isNaN(val) ? 0 : val;
+    }
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function startGame() {
+      round = 1;
+      money = 0;
+      gameActive = true;
+      document.getElementById('tryBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = false;
+      document.getElementById('newGameBtn').disabled = true;
+      document.getElementById('historyLog').dataset.started = '1';
+      showRound();
+    }
+
+    function tryAnswer() {
+      if (!gameActive) return;
+      const roll = Math.random();
+      if (roll < currentProb) {
+        logMove(`Question ${round} (worth $${currentPrize}, ${(currentProb * 100).toFixed(1)}% risk): wrong answer!`);
+        round = 8;
+      } else {
+        money += currentPrize;
+        logMove(`Question ${round} (worth $${currentPrize}, ${(currentProb * 100).toFixed(1)}% risk): correct! Bank is now $${money}.`);
+        round++;
+      }
+      showRound();
+    }
+
+    function stopGame() {
+      if (!gameActive) return;
+      round = 7;
+      showRound();
+    }
+
+    function showRound() {
+      const messageBox = document.getElementById('messageBox');
+      messageBox.className = 'message-box';
+
+      if (round <= 6) {
+        currentPrize = getParam('W', round);
+        currentProb = getParam('P', round);
+        document.getElementById('statRound').innerText = `${round} of 6`;
+        document.getElementById('statWorth').innerText = '$' + currentPrize;
+        document.getElementById('statProb').innerText = (currentProb * 100).toFixed(1) + '%';
+        messageBox.innerText = '';
+      } else {
+        document.getElementById('statRound').innerText = 'End of game';
+        if (round === 7) {
+          messageBox.classList.add('won');
+          messageBox.innerText = `End. You won $${money}!`;
+        } else {
+          messageBox.classList.add('lost');
+          messageBox.innerText = 'End. You lost everything.';
+        }
+      }
+
+      document.getElementById('statMoney').innerText = '$' + money;
+
+      if (round > 6) {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      gameActive = false;
+      document.getElementById('tryBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = true;
+      document.getElementById('newGameBtn').disabled = false;
+
+      const W = [1, 2, 3, 4, 5, 6].map(i => getParam('W', i));
+      const P = [1, 2, 3, 4, 5, 6].map(i => getParam('P', i));
+      const outcome = round === 7 ? `You won $${money}.` : 'You lost everything.';
+      logMove(`Parameters: Worth ${W.join(',')} / P(wrong) ${P.join(',')}. ${outcome}`, true);
+    }
+
+    startGame();
+  </script>
+</body>
+</html>

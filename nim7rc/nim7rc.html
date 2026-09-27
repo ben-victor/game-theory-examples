@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Random NIM(n,p) vs Computer</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --nature-color: #a855f7;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .turn-banner {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      min-height: 1.6em;
+      margin-bottom: 1.5rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .turn-banner.nature {
+      background: rgba(168, 85, 247, 0.15);
+      color: var(--nature-color);
+    }
+
+    .turn-banner.win {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .turn-banner.lose {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+    }
+
+    .coin-track {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      margin-bottom: 1.5rem;
+      min-height: 100px;
+      align-items: center;
+    }
+
+    .coin {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #e2e8f0, #64748b 70%);
+      border: 3px solid #475569;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    .coin.clickable { cursor: pointer; }
+
+    .coin.preview {
+      transform: translateY(-6px);
+      box-shadow: 0 0 0 3px var(--highlight), 0 6px 10px rgba(0,0,0,0.4);
+    }
+
+    .coin.computer-preview {
+      transform: translateY(-6px);
+      box-shadow: 0 0 0 3px #f87171, 0 6px 10px rgba(0,0,0,0.4);
+    }
+
+    .coin.nature-preview {
+      transform: translateY(-6px);
+      box-shadow: 0 0 0 3px var(--nature-color), 0 6px 10px rgba(0,0,0,0.4);
+    }
+
+    .coin.gone {
+      opacity: 0.15;
+      transform: scale(0.7);
+    }
+
+    .setup-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .setup-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .setup-controls input {
+      width: 70px;
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .setup-controls button {
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+    }
+
+    .setup-controls button:hover {
+      opacity: 0.9;
+    }
+
+    .setup-error {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #f87171;
+      min-height: 1.2em;
+      margin-bottom: 1rem;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .history-entry.nature {
+      color: var(--nature-color);
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 420px) {
+      .coin { width: 42px; height: 42px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>Random NIM(n,p) vs Computer</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> Same as NIM(n) — you and the computer alternate removing <strong>one or
+      two</strong> stones from a single row, only ever from the right-hand end, and whoever cannot move
+      because no stones are left <strong>loses</strong>. You move first.
+      <br><br>
+      The twist: after <em>every</em> move (yours or the computer's), before the other player's turn,
+      <strong>nature</strong> steps in — with probability <em>p</em> it randomly removes one more stone
+      from the row, and with probability 1&minus;<em>p</em> it removes nothing. If that random removal
+      empties the row, the player who was about to move loses, just as if they'd run out of moves normally.
+      <br><br>
+      The computer's strategy isn't the simple mod-3 rule from plain NIM — with chance in play, the right
+      move depends on both how many stones remain <em>and</em> the value of <em>p</em>, so the computer
+      uses a set of precomputed thresholds in <em>p</em> for each stone count to play optimally against
+      whatever probability you set below.
+    </div>
+
+    <div class="scoreboard">
+      <div>You: <span id="playerScore">0</span></div>
+      <div>Computer: <span id="computerScore">0</span></div>
+    </div>
+
+    <div class="turn-banner" id="turnBanner">Your move</div>
+
+    <div class="coin-track" id="coinTrack"></div>
+
+    <div class="setup-title">Start a new row</div>
+    <div class="setup-controls">
+      <label>n =</label>
+      <input type="number" id="sizeInput" min="4" max="11" value="7">
+      <label>p =</label>
+      <input type="number" id="probInput" min="0.01" max="1" step="0.01" value="0.5">
+      <button onclick="handleStart()">Start</button>
+    </div>
+    <div class="setup-error" id="setupError"></div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <footer>
+      Based on <strong>Random NIM(n,p) against the Computer</strong>, a game theory exercise created by
+      <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    const MIN_SIZE = 4;
+    const MAX_SIZE = 11;
+
+    let startSize = 7;
+    let coins = startSize;
+    let pValue = 0.5;
+    let turn = 'you'; // 'you' | 'computer'
+    let gameOver = false;
+    let previewCount = 0;
+    let busy = false; // true while computer or nature is "acting"
+    let scores = { you: 0, computer: 0 };
+    let round = 1;
+
+    function computerDecision(n, p) {
+      switch (n) {
+        case 10: return (p < 0.208 || p > 0.474) ? 1 : 2;
+        case 9: return (p < 0.308) ? 2 : 1;
+        case 8: return (p < 0.208 || p > 0.545) ? 2 : 1;
+        case 7: return (p < 0.267) ? 1 : 2;
+        case 6: return (p < 0.545) ? 2 : 1;
+        case 5: return (p < 0.267) ? 2 : 1;
+        case 4: return 1;
+        case 3: return 1;
+        case 2: return 2;
+        case 1: return 1;
+        default: return 1;
+      }
+    }
+
+    function handleStart() {
+      const errorEl = document.getElementById('setupError');
+      const nVal = parseInt(document.getElementById('sizeInput').value, 10);
+      const pVal = parseFloat(document.getElementById('probInput').value);
+
+      if (isNaN(nVal) || nVal < MIN_SIZE || nVal > MAX_SIZE) {
+        errorEl.innerText = `n must be from ${MIN_SIZE} to ${MAX_SIZE}.`;
+        return;
+      }
+      if (isNaN(pVal) || pVal <= 0 || pVal > 1) {
+        errorEl.innerText = 'p must be greater than 0 and at most 1.';
+        return;
+      }
+      errorEl.innerText = '';
+      start(nVal, pVal);
+    }
+
+    function start(n, p) {
+      startSize = n;
+      coins = n;
+      pValue = p;
+      turn = 'you';
+      gameOver = false;
+      previewCount = 0;
+      busy = false;
+      bannerOverride = false;
+      document.getElementById('sizeInput').value = n;
+      document.getElementById('probInput').value = p;
+      document.getElementById('historyLog').innerHTML = '';
+      logMove(`Round ${round}: new row of ${n} stones, p = ${p}. Your move.`);
+      render();
+    }
+
+    function logMove(text, cls = '') {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${cls}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function removeCoins(n) {
+      if (gameOver || busy || turn !== 'you') return;
+      if (n > coins) return;
+      coins -= n;
+      previewCount = 0;
+      logMove(`You remove ${n} stone${n !== 1 ? 's' : ''} (${coins} left).`);
+
+      if (coins === 0) {
+        finishRound('you');
+        return;
+      }
+
+      turn = 'computer';
+      render();
+      runNatureStep('you', 'computer');
+    }
+
+    function computerMove() {
+      if (gameOver) return;
+      busy = true;
+      const take = computerDecision(coins, pValue);
+      previewCount = take;
+      render();
+      setTimeout(() => {
+        coins -= take;
+        previewCount = 0;
+        logMove(`Computer removes ${take} stone${take !== 1 ? 's' : ''} (${coins} left).`);
+
+        if (coins === 0) {
+          finishRound('computer');
+          return;
+        }
+
+        turn = 'you';
+        render();
+        runNatureStep('computer', 'you');
+      }, 700);
+    }
+
+    function runNatureStep(afterMover, nextPlayer) {
+      busy = true;
+      showBanner('nature', 'Nature is deciding...');
+      render();
+      setTimeout(() => {
+        const roll = Math.random();
+        if (roll <= pValue) {
+          coins = Math.max(0, coins - 1);
+          logMove('Nature randomly removes one more stone.', 'nature');
+          showBanner('nature', 'Nature removes one stone!');
+        } else {
+          logMove('Nature removes nothing this time.', 'nature');
+          showBanner('nature', 'Nature removes nothing.');
+        }
+        render();
+
+        setTimeout(() => {
+          busy = false;
+          if (coins === 0) {
+            finishRound(afterMover);
+          } else {
+            turn = nextPlayer;
+            bannerOverride = false;
+            render();
+            if (nextPlayer === 'computer') {
+              setTimeout(computerMove, 500);
+            }
+          }
+        }, 900);
+      }, 700);
+    }
+
+    function finishRound(winner) {
+      gameOver = true;
+      busy = false;
+      scores[winner]++;
+      document.getElementById(winner === 'you' ? 'playerScore' : 'computerScore').innerText = scores[winner];
+      logMove(`Round ${round}: ${winner === 'you' ? 'You win' : 'Computer wins'}!`, 'end');
+      round++;
+      showBanner(winner === 'you' ? 'win' : 'lose', winner === 'you' ? 'You win!' : 'Computer wins!');
+      render();
+    }
+
+    function setPreview(n) {
+      if (gameOver || busy || turn !== 'you') return;
+      previewCount = n;
+      render();
+    }
+
+    function clearPreview() {
+      if (busy) return;
+      previewCount = 0;
+      render();
+    }
+
+    let bannerOverride = false;
+
+    function showBannerPlain(text) {
+      const banner = document.getElementById('turnBanner');
+      banner.className = 'turn-banner';
+      banner.innerText = text;
+    }
+
+    function showBanner(cls, text) {
+      bannerOverride = true;
+      const banner = document.getElementById('turnBanner');
+      banner.className = `turn-banner ${cls}`;
+      banner.innerText = text;
+    }
+
+    function render() {
+      if (!gameOver && !bannerOverride) {
+        showBannerPlain(turn === 'you' ? 'Your move' : 'Computer to move');
+      }
+
+      const track = document.getElementById('coinTrack');
+      track.innerHTML = '';
+      for (let i = 0; i < startSize; i++) {
+        const coin = document.createElement('div');
+        if (i >= coins) {
+          coin.className = 'coin gone';
+        } else {
+          const posFromRight = coins - i;
+          const isLast = posFromRight === 1;
+          const isSecondLast = posFromRight === 2;
+          const yourTurnActive = turn === 'you' && !gameOver && !busy;
+          let cls = 'coin';
+          if ((isLast || isSecondLast) && yourTurnActive) cls += ' clickable';
+
+          let previewClass = 'preview';
+          if (turn === 'computer' && busy) previewClass = 'computer-preview';
+          if (bannerOverride && document.getElementById('turnBanner').className.includes('nature')) previewClass = 'nature-preview';
+
+          if (previewCount >= 1 && isLast) cls += ' ' + previewClass;
+          if (previewCount === 2 && isSecondLast) cls += ' ' + previewClass;
+
+          coin.className = cls;
+          if (yourTurnActive) {
+            if (isLast) {
+              coin.onmouseenter = () => setPreview(1);
+              coin.onmouseleave = clearPreview;
+              coin.onclick = () => removeCoins(1);
+            } else if (isSecondLast) {
+              coin.onmouseenter = () => setPreview(2);
+              coin.onmouseleave = clearPreview;
+              coin.onclick = () => removeCoins(2);
+            }
+          }
+        }
+        track.appendChild(coin);
+      }
+    }
+
+    start(7, 0.5);
+  </script>
+</body>
+</html>

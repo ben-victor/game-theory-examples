@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>5 Envelopes</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --disabled-card: #475569;
+      --highlight: #facc15;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .rules {
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.6rem;
+    }
+
+    .params-panel {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .params-panel p {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin: 0 0 0.7rem 0;
+    }
+
+    .params-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.7rem;
+    }
+
+    .params-row .env-field {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    .params-row input {
+      width: 80px;
+      text-align: center;
+      padding: 0.4rem;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    .params-row input:disabled {
+      color: #64748b;
+      background: rgba(0,0,0,0.15);
+    }
+
+    .params-row .fixed-zero {
+      width: 80px;
+      text-align: center;
+      padding: 0.4rem;
+      border-radius: 6px;
+      border: 1px dashed #334155;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    .sum-display {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      margin-bottom: 0.7rem;
+    }
+
+    .sum-display strong { color: var(--highlight); }
+
+    .params-buttons {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .params-buttons button {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem;
+      font-weight: bold;
+      font-size: 0.82rem;
+      cursor: pointer;
+      background: var(--disabled-card);
+      color: #f8fafc;
+    }
+
+    .params-buttons button.apply-btn {
+      background: var(--accent);
+      color: #0f172a;
+    }
+
+    .params-buttons button:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .params-buttons button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .play-panel {
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .envelope-pool {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      min-height: 60px;
+    }
+
+    .envelope {
+      width: 54px;
+      height: 40px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, #475569, #334155);
+      border: 2px solid #64748b;
+    }
+
+    .opened-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      min-height: 30px;
+    }
+
+    .opened-chip {
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+    }
+
+    .opened-chip.empty {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    .play-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.7rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-box {
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      text-align: center;
+    }
+
+    .stat-box .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-box .stat-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--highlight);
+    }
+
+    .message-box {
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 600;
+      min-height: 1.6em;
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+
+    .message-box.won { color: var(--success); }
+    .message-box.lost { color: var(--danger); }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-weight: bold;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+
+    .yes-btn { background: var(--success); color: #0f172a; }
+    .no-btn { background: var(--highlight); color: #0f172a; }
+
+    .action-buttons button:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .new-game-btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: bold;
+      font-size: 0.95rem;
+      padding: 0.8rem;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+
+    .new-game-btn:disabled {
+      background: var(--disabled-card);
+      color: #cbd5e1;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .new-game-btn:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .average-box {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+
+    .average-box strong {
+      color: var(--highlight);
+      font-size: 1rem;
+    }
+
+    .history-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      max-height: 170px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
+
+    .history-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-entry.end {
+      font-weight: bold;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to Games</a>
+    <h1>5 Envelopes</h1>
+
+    <div class="rules">
+      <strong>Rules:</strong> There are 5 envelopes. One always contains <strong>nothing</strong>; the
+      other four contain increasing amounts of money. The envelopes are shuffled, and each round you
+      may either ask for one more (randomly chosen from whatever's left) or stop and keep what you've
+      accumulated. Draw the empty envelope and you lose <strong>everything</strong> you've collected so
+      far — otherwise its value is added to your total.
+    </div>
+
+    <div class="params-panel">
+      <div class="section-title">Parameters</div>
+      <p>Envelope 1 is always empty. Set the other four amounts, then press Apply — this also resets the
+        average-win tracker below for the new parameter set.</p>
+      <div class="params-row">
+        <div class="env-field">
+          <span>Envelope 1</span>
+          <span class="fixed-zero">$0</span>
+        </div>
+        <div class="env-field">
+          <span>Envelope 2</span>
+          <input id="W2" type="number" step="any" value="1000">
+        </div>
+        <div class="env-field">
+          <span>Envelope 3</span>
+          <input id="W3" type="number" step="any" value="2000">
+        </div>
+        <div class="env-field">
+          <span>Envelope 4</span>
+          <input id="W4" type="number" step="any" value="3000">
+        </div>
+        <div class="env-field">
+          <span>Envelope 5</span>
+          <input id="W5" type="number" step="any" value="4000">
+        </div>
+      </div>
+      <div class="sum-display">Sum of envelopes 2&ndash;5: <strong id="sumDisplay">$10000</strong></div>
+      <div class="params-buttons">
+        <button onclick="resetToExample()">Reset to Example Values</button>
+        <button class="apply-btn" onclick="applyParameters()">Apply Parameters</button>
+      </div>
+    </div>
+
+    <div class="play-panel">
+      <div class="section-title" style="text-align:center;">Sealed Envelopes Remaining</div>
+      <div class="envelope-pool" id="envelopePool"></div>
+
+      <div class="section-title" style="text-align:center;">Opened So Far</div>
+      <div class="opened-row" id="openedRow"></div>
+
+      <div class="play-stats">
+        <div class="stat-box">
+          <div class="stat-label">Envelopes Left</div>
+          <div class="stat-value" id="statRemaining">5</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Total So Far</div>
+          <div class="stat-value" id="statGain">$0</div>
+        </div>
+      </div>
+
+      <div class="message-box" id="messageBox"></div>
+
+      <div class="action-buttons">
+        <button class="yes-btn" id="yesBtn" onclick="drawEnvelope()">Take Another Envelope</button>
+        <button class="no-btn" id="noBtn" onclick="stopGame()">Keep My Money &amp; Stop</button>
+      </div>
+    </div>
+
+    <button class="new-game-btn" id="newGameBtn" onclick="startGame()" disabled>New Game</button>
+
+    <div class="average-box" id="averageBox">Average win with current parameters: <strong>$0</strong> over 0 games</div>
+
+    <div class="history-title">Match History</div>
+    <div class="history-box" id="historyLog"></div>
+
+    <footer>
+      Based on <strong>5 Envelopes</strong>, a game theory exercise created by <strong>Prof. Erich Prisner</strong>.<br />
+      Published in <em>Game Theory through Examples</em> (Mathematical Association of America, 2014).<br />
+      Original site: <a href="http://eprisner.de/MAT109/MAT109.html" target="_blank" rel="noopener noreferrer">eprisner.de</a>
+    </footer>
+  </div>
+
+  <script>
+    let appliedValues = [1000, 2000, 3000, 4000]; // envelopes 2-5
+    let pool = [];          // remaining {value, isEmpty} for the current game
+    let openedValues = [];  // {value, isEmpty} in the order drawn, this game
+    let gain = 0;
+    let gameActive = false;
+    let gamesPlayedWithParams = 0;
+    let averageGain = 0;
+
+    function logMove(text, isEnd = false) {
+      const log = document.getElementById('historyLog');
+      const entry = document.createElement('div');
+      entry.className = `history-entry ${isEnd ? 'end' : ''}`;
+      entry.innerText = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function resetToExample() {
+      document.getElementById('W2').value = 1000;
+      document.getElementById('W3').value = 2000;
+      document.getElementById('W4').value = 3000;
+      document.getElementById('W5').value = 4000;
+    }
+
+    function applyParameters() {
+      const vals = ['W2', 'W3', 'W4', 'W5'].map(id => {
+        const v = parseFloat(document.getElementById(id).value);
+        return isNaN(v) ? 0 : v;
+      });
+      appliedValues = vals;
+      document.getElementById('sumDisplay').innerText = '$' + vals.reduce((a, b) => a + b, 0);
+      gamesPlayedWithParams = 0;
+      averageGain = 0;
+      updateAverageDisplay();
+      logMove(`Parameters applied: 0, ${vals.join(', ')}.`);
+    }
+
+    function buildPool() {
+      return [
+        { value: 0, isEmpty: true },
+        { value: appliedValues[0], isEmpty: false },
+        { value: appliedValues[1], isEmpty: false },
+        { value: appliedValues[2], isEmpty: false },
+        { value: appliedValues[3], isEmpty: false }
+      ];
+    }
+
+    function startGame() {
+      pool = buildPool();
+      openedValues = [];
+      gain = 0;
+      gameActive = true;
+      gamesPlayedWithParams++;
+
+      document.getElementById('yesBtn').disabled = false;
+      document.getElementById('noBtn').disabled = false;
+      document.getElementById('newGameBtn').disabled = true;
+      document.getElementById('messageBox').className = 'message-box';
+      document.getElementById('messageBox').innerText = '';
+
+      render();
+    }
+
+    function drawEnvelope() {
+      if (!gameActive) return;
+      const idx = Math.floor(Math.random() * pool.length);
+      const envelope = pool.splice(idx, 1)[0];
+      openedValues.push(envelope);
+
+      if (envelope.isEmpty) {
+        logMove('Drew an envelope — it was EMPTY! Everything is lost.');
+        endGame('you lost all', 0, true);
+      } else {
+        gain += envelope.value;
+        logMove(`Drew an envelope worth $${envelope.value}. Total so far: $${gain}.`);
+        render();
+      }
+    }
+
+    function stopGame() {
+      if (!gameActive) return;
+      logMove(`Stopped and kept $${gain}.`);
+      endGame(`you won $${gain}`, gain, false);
+    }
+
+    function endGame(outcomeText, finalGain, lost) {
+      gameActive = false;
+      document.getElementById('yesBtn').disabled = true;
+      document.getElementById('noBtn').disabled = true;
+      document.getElementById('newGameBtn').disabled = false;
+
+      const messageBox = document.getElementById('messageBox');
+      messageBox.className = 'message-box ' + (lost ? 'lost' : 'won');
+      messageBox.innerText = lost ? 'You lost everything!' : `You won $${finalGain}!`;
+
+      averageGain = ((gamesPlayedWithParams - 1) * averageGain + finalGain) / gamesPlayedWithParams;
+      updateAverageDisplay();
+
+      logMove(`Parameters: 0, ${appliedValues.join(', ')}. Result: ${outcomeText}.`, true);
+      render();
+    }
+
+    function updateAverageDisplay() {
+      document.getElementById('averageBox').innerHTML =
+        `Average win with current parameters: <strong>$${averageGain.toFixed(2)}</strong> over ${gamesPlayedWithParams} game${gamesPlayedWithParams !== 1 ? 's' : ''}`;
+    }
+
+    function render() {
+      document.getElementById('statRemaining').innerText = pool.length;
+      document.getElementById('statGain').innerText = '$' + gain;
+
+      const poolEl = document.getElementById('envelopePool');
+      poolEl.innerHTML = '';
+      for (let i = 0; i < pool.length; i++) {
+        const el = document.createElement('div');
+        el.className = 'envelope';
+        el.innerText = '✉️';
+        poolEl.appendChild(el);
+      }
+
+      const openedEl = document.getElementById('openedRow');
+      openedEl.innerHTML = '';
+      openedValues.forEach(o => {
+        const chip = document.createElement('div');
+        chip.className = 'opened-chip' + (o.isEmpty ? ' empty' : '');
+        chip.innerText = o.isEmpty ? 'EMPTY' : '$' + o.value;
+        openedEl.appendChild(chip);
+      });
+    }
+
+    // Initial load: matches start11() defaults, then starts the first game.
+    applyParameters();
+    startGame();
+  </script>
+</body>
+</html>
